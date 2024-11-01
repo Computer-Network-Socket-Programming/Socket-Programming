@@ -1,7 +1,10 @@
 package view;
 
+import view.MailInfo;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 public class MailDetailPanel extends JPanel {
@@ -10,29 +13,39 @@ public class MailDetailPanel extends JPanel {
     JLabel senderLabel, receiverLabel, dateLabel, subjectLabel, contentLabel;
     JTextField senderAddress, receiverAddress, mailDate, subject;
     JTextArea content;
-    GridBagLayout gridBagLayout;
+    JScrollPane contentScroll;
+    JButton mailListButton;
+    BorderLayout borderLayout;
+    GridLayout gridLayout;
 
-    public MailDetailPanel() {
+    public MailDetailPanel(CardLayout cardLayout, JPanel parentPanel) {
+
+        borderLayout = new BorderLayout();
+        gridLayout = new GridLayout(0,2);
 
         dummydatas.add("sender@naver.com");
         dummydatas.add("receiver@naver.com");
         dummydatas.add("2024년 10월 30일 00:00");
         dummydatas.add("메일 제목");
-        dummydatas.add("자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자..자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자..자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자..");
+        dummydatas.add("자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자.. 자니? 자는구나... 잘자..");
+
         mailInfo = new MailInfo(dummydatas.get(0), dummydatas.get(1), dummydatas.get(2), dummydatas.get(3), dummydatas.get(4));
+        setLayout(borderLayout);
 
-        // GridBagLayout 초기화 및 설정
-        gridBagLayout = new GridBagLayout();
-        setLayout(gridBagLayout);
 
-        // 컴포넌트 초기화
+        JPanel mailDetailPanel = new JPanel();
+        mailDetailPanel.setLayout(gridLayout);
+        add(mailDetailPanel,BorderLayout.NORTH);
+
         subjectLabel = new JLabel("메일 제목:", JLabel.RIGHT);
         senderLabel = new JLabel("보낸 사람:", JLabel.RIGHT);
         receiverLabel = new JLabel("받는 사람:", JLabel.RIGHT);
         dateLabel = new JLabel("날짜:", JLabel.RIGHT);
-        contentLabel = new JLabel("내용:", JLabel.RIGHT);
+        contentLabel = new JLabel("내용:", JLabel.LEFT);
 
-        subject = new JTextField(20);
+
+
+        subject = new JTextField(50);
         subject.setEditable(false);
         subject.setText(mailInfo.getSubject());
 
@@ -48,42 +61,42 @@ public class MailDetailPanel extends JPanel {
         mailDate.setEditable(false);
         mailDate.setText(mailInfo.getDate());
 
+        mailDetailPanel.add(subjectLabel);
+        mailDetailPanel.add(subject);
+        mailDetailPanel.add(senderLabel);
+        mailDetailPanel.add(senderAddress);
+        mailDetailPanel.add(receiverLabel);
+        mailDetailPanel.add(receiverAddress);
+        mailDetailPanel.add(dateLabel);
+        mailDetailPanel.add(mailDate);
+        mailDetailPanel.add(contentLabel);
+
+
+
         content = new JTextArea(5, 20);
         content.setEditable(false);
         content.setLineWrap(true);
         content.setWrapStyleWord(true);
         content.setText(mailInfo.getContent());
 
-        // content에만 스크롤 추가
-        JScrollPane contentScroll = new JScrollPane(content);
+        contentScroll = new JScrollPane(content);
         contentScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
-        // GridBagLayout에 컴포넌트 추가
-        insertGridBagLayout(subjectLabel, 0, 0, 1, 1);
-        insertGridBagLayout(subject, 1, 0, 10, 1);
+        add(contentScroll,BorderLayout.CENTER);
+        mailListButton = new JButton("목록으로 돌아가기");
+        add(mailListButton,BorderLayout.SOUTH);
+        mailListButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == mailListButton) {
+                    cardLayout.show(parentPanel, "MailListPanel");
+                }
+            }
 
-        insertGridBagLayout(senderLabel, 0, 3, 1, 1);
-        insertGridBagLayout(senderAddress, 1, 3, 10, 1);
 
-        insertGridBagLayout(receiverLabel, 0, 5, 1, 1);
-        insertGridBagLayout(receiverAddress, 1, 5, 10, 1);
 
-        insertGridBagLayout(dateLabel, 0, 7, 1, 1);
-        insertGridBagLayout(mailDate, 1, 7, 10, 1);
-
-        insertGridBagLayout(contentLabel, 0, 9, 1, 1);
-        insertGridBagLayout(contentScroll, 1, 10, 10, 5); // content에만 스크롤 추가
+        });
     }
 
-    // GridBagLayout에 컴포넌트를 추가하는 메서드
-    public void insertGridBagLayout(JComponent c, int x, int y, int w, int h) {
-        GridBagConstraints gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = x;
-        gridBagConstraints.gridy = y;
-        gridBagConstraints.gridwidth = w;
-        gridBagConstraints.gridheight = h;
-        gridBagLayout.setConstraints(c, gridBagConstraints);
-        add(c);
-    }
+
 }
