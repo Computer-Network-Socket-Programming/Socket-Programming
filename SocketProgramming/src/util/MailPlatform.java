@@ -2,7 +2,7 @@ package util;
 
 public enum MailPlatform {
     NAVER("smtp.naver.com"),
-    GOOGLE("smtp.google.com");
+    GMAIL("smtp.google.com");
 
     private final String smtpServer;
 
