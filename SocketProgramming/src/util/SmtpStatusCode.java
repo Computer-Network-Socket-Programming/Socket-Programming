@@ -1,6 +1,8 @@
 package util;
 
 public enum SmtpStatusCode {
+    INITIALIZE(0, "Initialize"),
+
     // 성공적인 응답
     SERVICE_READY(220, "<domain> Service ready"),
     SERVICE_CLOSING(221, "<domain> Service closing transmission channel"),
