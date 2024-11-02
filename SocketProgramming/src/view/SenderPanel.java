@@ -16,11 +16,11 @@ public class SenderPanel extends JPanel {
     private final JTextField receiverField, subjectField;  // form 에 들어갈 text field
     private final JTextArea messageArea;    // form 에 들어갈 text area
 
-    public SenderPanel(String username, String password) {
-        this.senderController = new SendingController(username, password);
+    public SenderPanel(String senderAddress, String password) {
         this.receiverField = new JTextField();
         this.subjectField = new JTextField();
         this.messageArea = new JTextArea();
+        this.senderController = new SendingController(senderAddress, password);
 
         initPanel();
     }
@@ -94,7 +94,7 @@ public class SenderPanel extends JPanel {
 
     /*
      * 보내기 버튼을 클릭했을 때 호출되는 메소드
-     * senderField, receiverField, subjectField, messageArea 에 입력된 값을 가져와서
+     * receiverField, subjectField, messageArea 에 입력된 값을 가져와서
      * controller 의 sendMail method 를 호출하여 메일을 전송함
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
@@ -102,18 +102,23 @@ public class SenderPanel extends JPanel {
         String recipient = receiverField.getText();
         String subject = subjectField.getText();
         String message = messageArea.getText();
-        SmtpStatusCode statusCode = SmtpStatusCode.INITIALIZE;
+        SmtpStatusCode statusCode;
 
         try {
             statusCode = senderController.sendMail(new MailDTO(recipient, subject, message, LocalDateTime.now()));
         } catch (UnknownHostException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "수신자 주소가 잘못되었습니다.");
-        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
+            return;
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "발신자 주소가 잘");
-        } finally {
-            System.out.println(statusCode.getCode() + statusCode.getDescription());
+            JOptionPane.showMessageDialog(this, "발신자 인증에 실패했습니다.");
+            return;
+        }
+
+        if (statusCode != SmtpStatusCode.SERVICE_CLOSING) {
+            JOptionPane.showMessageDialog(this, "메일 전송에 실패했습니다.");
+            return;
         }
 
         JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
