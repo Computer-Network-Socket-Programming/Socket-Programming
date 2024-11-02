@@ -25,15 +25,15 @@ public class SendingController {
         }
     }
 
-    public SmtpStatusCode SendMailByNaverSMTP(MailDTO mailDTO) throws IOException {
+    public SmtpStatusCode sendMail(MailDTO mailDTO) throws IOException {
         Socket socket = new Socket(smtpServer, port);
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        DataOutputStream outToServer = new DataOutputStream(socket.getOutputStream());
+        BufferedReader inFromClient = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-        System.out.println(reader.readLine());
+        System.out.println(inFromClient.readLine());
 
-        reader.close();
-        writer.close();
+        inFromClient.close();
+        outToServer.close();
         socket.close();
 
         return SmtpStatusCode.SERVICE_CLOSING;
