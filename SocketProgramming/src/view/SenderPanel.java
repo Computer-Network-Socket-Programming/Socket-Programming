@@ -151,7 +151,7 @@ public class SenderPanel extends JPanel {
             return;
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "발신자 인증에 실패했습니다.");
+            JOptionPane.showMessageDialog(this, "발신자 또는 파일 인증에 실패했습니다.");
             return;
         }
 
