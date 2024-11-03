@@ -7,7 +7,7 @@ import java.awt.event.ActionListener;
 public class Login extends JFrame {
     private static String id;
     private static String pw;
-    private GridBagLayout layout;
+    private final GridBagLayout layout;
 
     public Login(){
         super("login");
@@ -21,7 +21,6 @@ public class Login extends JFrame {
 
         //레이아웃 생성, 배치
         layout = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();
         setLayout(layout);
 
         gbinsert(idLabel,0,0,1,1);
@@ -46,8 +45,8 @@ public class Login extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 id = idField.getText();// id 전달
                 pw = new String(pwField.getPassword());
-                System.out.println(id);
-                System.out.println(pw);
+                //System.out.println(id);
+                //System.out.println(pw);
                 //new Part1(); //메인 화면 객체 생성하기
                 setVisible(false); // 창 안보이게 하기
             }
