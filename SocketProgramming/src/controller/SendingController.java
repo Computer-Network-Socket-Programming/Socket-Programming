@@ -34,27 +34,20 @@ public class SendingController {
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
         for (int i = 0; i < command.length; i++) {
-            if (i == 2 || i == 3)
-                outToServer.writeBytes(Base64.getEncoder().encodeToString(command[i].getBytes()));
-            else
-                outToServer.writeBytes(command[i]);
-
-            Thread.sleep(1000);
-            System.out.println("i = " + i);
-            System.out.println("Command: " + command[i]);
-            Thread.sleep(1000);
             String responseValue = inFromServer.readLine();
-            System.out.println("Response: " + responseValue);
-            Thread.sleep(1000);
+//            System.out.println("Response: " + responseValue);
+
             if (responseValue.startsWith("5")) {
-                System.out.println(responseValue);
                 return SmtpStatusCode.SYNTAX_ERROR;
-            }
-            else if (responseValue.startsWith("4")) {
-                System.out.println(responseValue);
+            } else if (responseValue.startsWith("4")) {
                 return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
             }
 
+            outToServer.writeBytes(command[i]);
+            outToServer.flush(); // 명령 전송 후 플러시하여 보냄
+
+//            System.out.println("i = " + i);
+//            System.out.println("Command: " + command[i]);
         }
 
         inFromServer.close();
@@ -70,14 +63,15 @@ public class SendingController {
 
     private String[] createCommand(MailDTO mailDTO) {
         return new String[]{
-                "HELO " + this.senderAddress,
-                "AUTH LOGIN",
-                this.senderAddress,
-                this.password,
-                "MAIL FROM:<" + this.senderAddress + ">",
-                "RCPT TO:<" + mailDTO.recipient() + ">",
-                "DATA",
-                "Subject: " + mailDTO.subject() + "\r\n" + "To: " + mailDTO.recipient() + "\r\n" + "From: " + this.senderAddress + "\r\n" + "\r\n" + mailDTO.message() + "\r\n.\r\n"
+                "HELO " + this.senderAddress + "\r\n",
+                "AUTH LOGIN" + "\r\n",
+                Base64.getEncoder().encodeToString(this.senderAddress.getBytes()) + "\r\n",
+                Base64.getEncoder().encodeToString(this.password.getBytes()) + "\r\n",
+                "MAIL FROM:<" + this.senderAddress + ">" + "\r\n",
+                "RCPT TO:<" + mailDTO.recipient() + ">" + "\r\n",
+                "DATA" + "\r\n",
+                "Subject: " + mailDTO.subject() + "\r\n" + "To: " + mailDTO.recipient() + "\r\n" + "From: " + this.senderAddress + "\r\n" + "\r\n" + mailDTO.message() + "\r\n.\r\n",
+                "QUIT" + "\r\n"
         };
     }
 }

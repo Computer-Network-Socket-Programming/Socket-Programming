@@ -15,7 +15,7 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(1, 1));
 
-        add(new SenderPanel(env.get("USER_NAME"), env.get("USER_PASSWORD")), BorderLayout.CENTER);
+        add(new SenderPanel(env.get("USER_NAME"), env.get("PASSWORD")), BorderLayout.CENTER);
 
         setSize(800, 600);
         setVisible(true);
