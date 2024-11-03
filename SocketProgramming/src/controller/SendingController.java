@@ -16,10 +16,11 @@ public class SendingController {
     private final MailPlatform smtpServer;
 
     public SendingController(String senderAddress, String password) {
-        this.port = 465;
+        this.port = 465;    // SSL 포트
         this.password = password;
         this.senderAddress = senderAddress;
 
+        // 이메일 주소의 도메인에 따라 SMTP 서버를 결정
         switch (senderAddress.split("@")[1]) {
             case "naver.com" -> this.smtpServer = MailPlatform.NAVER;
             case "google.com" -> this.smtpServer = MailPlatform.GMAIL;
@@ -27,23 +28,30 @@ public class SendingController {
         }
     }
 
+    /*
+        * 메일을 전송하는 메소드
+        * @param mailDTO 메일 정보를 담은 DTO
+        * @return 전송 결과를 나타내는 SmtpStatusCode
+     */
     public SmtpStatusCode sendMail(MailDTO mailDTO) throws IOException, InterruptedException {
         String[] command = createCommand(mailDTO);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
 
+        // 메일 전송
         for (int i = 0; i < command.length; i++) {
-            String responseValue = inFromServer.readLine();
+            String responseValue = inFromServer.readLine(); // 서버 응답 확인
 //            System.out.println("Response: " + responseValue);
 
+            // 예외 처리
             if (responseValue.startsWith("5")) {
                 return SmtpStatusCode.SYNTAX_ERROR;
             } else if (responseValue.startsWith("4")) {
                 return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
             }
 
-            outToServer.writeBytes(command[i]);
+            outToServer.writeBytes(command[i]); // 명령 전송
             outToServer.flush(); // 명령 전송 후 플러시하여 보냄
 
 //            System.out.println("i = " + i);
@@ -56,11 +64,13 @@ public class SendingController {
         return SmtpStatusCode.SERVICE_CLOSING;
     }
 
+    // SSL 소켓 생성
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         return (SSLSocket) sslSocketFactory.createSocket(this.smtpServer.getSmtpServer(), this.port);
     }
 
+    // SMTP 명령어 생성
     private String[] createCommand(MailDTO mailDTO) {
         return new String[]{
                 "HELO " + this.senderAddress + "\r\n",
