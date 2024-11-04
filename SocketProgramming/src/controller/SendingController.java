@@ -95,14 +95,14 @@ public class SendingController {
         // SMTP 명령어 생성
         commands.add("HELO " + this.senderAddress + "\r\n");
         commands.add("AUTH LOGIN" + "\r\n");
-        commands.add(Base64.getEncoder().encodeToString(this.senderAddress.getBytes()) + "\r\n");
-        commands.add(Base64.getEncoder().encodeToString(this.password.getBytes()) + "\r\n");
+        commands.add(encodeText(this.senderAddress.getBytes()) + "\r\n");
+        commands.add(encodeText(this.password.getBytes()) + "\r\n");
         commands.add("MAIL FROM:<" + this.senderAddress + ">\r\n");
         commands.add("RCPT TO:<" + mailDTO.recipient() + ">\r\n");
         commands.add("DATA\r\n");
 
         // 이메일 헤더 설정
-        commands.add("Subject: " + encodeSubject(mailDTO.subject()) + "\r\n");
+        commands.add("Subject: =?utf-8?B?" + encodeText(mailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
         commands.add("To: " + mailDTO.recipient() + "\r\n");
         commands.add("From: " + this.senderAddress + "\r\n");
         commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
@@ -112,7 +112,7 @@ public class SendingController {
         commands.add("--" + boundary + "\r\n");
         commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
         commands.add("Content-Transfer-Encoding: base64\r\n");
-        commands.add("\r\n" + Base64.getEncoder().encodeToString(mailDTO.message().getBytes("UTF-8")) + "\r\n");
+        commands.add("\r\n" + encodeText(mailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
 
         // 첨부 파일 추가
         for (File file : mailDTO.attachedFiles()) {
@@ -142,9 +142,9 @@ public class SendingController {
         return "application/octet-stream"; // 기본값은 바이너리 파일로 가정
     }
 
-    // 제목을 Base64로 인코딩하는 메서드
-    private String encodeSubject(String subject) throws UnsupportedEncodingException {
-        return "=?utf-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes("UTF-8")) + "?=";
+    private String encodeText(byte[] text) {
+        return Base64.getEncoder().encodeToString(text);
+
     }
 
     // 파일을 Base64로 인코딩
