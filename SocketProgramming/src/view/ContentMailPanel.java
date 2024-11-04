@@ -1,6 +1,6 @@
 package view;
 
-import main.SendMailFrame;
+import model.DeliverMailDTO;
 import model.ReplyMailDTO;
 
 import javax.swing.*;
@@ -18,15 +18,13 @@ public class ContentMailPanel extends JPanel {
     JScrollPane contentScroll;
     JButton mailListButton;
     JButton replyMailButton;
+    JButton mailDeliverButton;
     BorderLayout borderLayout;
     GridLayout gridLayout;
-    SenderPanel senderPanel;
-    SendMailFrame mainFrame;
+
 
     public ContentMailPanel(CardLayout cardLayout, JPanel parentPanel) {
 
-
-        this.senderPanel = senderPanel;
 
         borderLayout = new BorderLayout();
         gridLayout = new GridLayout(0,2);
@@ -127,7 +125,29 @@ public class ContentMailPanel extends JPanel {
                     }
 
                     ReplyMailDTO replyMailDTO = new ReplyMailDTO("Re:   "+ receiver, "-----Original Message-----\n\n" + content +"\n\n");
-                    new SendMailFrame(replyMailDTO);
+                    new SenderFrame("dmlwhd010@naver.com","yuneui1523",replyMailDTO);
+                }
+            }
+        });
+
+        mailDeliverButton = new JButton("전달");
+        buttonPanel.add(mailDeliverButton,gridLayout);
+        mailDeliverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == mailDeliverButton) {
+                    String sender = mailInfo.getSender();
+                    String subject = mailInfo.getSubject();
+                    String content = mailInfo.getContent();
+
+                    if (subject == null || subject.isEmpty()) {
+                        JOptionPane.showMessageDialog(null,"제목이 유효하지 않습니다.");
+                    }
+                    if (content == null || content.isEmpty()) {
+                        JOptionPane.showMessageDialog(null,"내용이 존재하지 않습니다.");
+                    }
+                    DeliverMailDTO deliverMailDTO = new DeliverMailDTO(subject,content);
+                    new SenderFrame("dmlwhd010@naver.com","yuneui1523",deliverMailDTO);
                 }
             }
         });

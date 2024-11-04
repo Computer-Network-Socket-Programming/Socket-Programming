@@ -1,6 +1,6 @@
 package controller;
 
-import model.MailDTO;
+import model.SendMailDTO;
 import util.commands.SmtpCommand;
 import util.enums.MailPlatform;
 import util.enums.SmtpStatusCode;
@@ -27,13 +27,13 @@ public class SmtpController {
         }
     }
 
-    public SmtpStatusCode scheduleEmailSend(MailDTO mailDTO) throws IOException, InterruptedException {
+    public SmtpStatusCode scheduleEmailSend(SendMailDTO sendMailDTO) throws IOException, InterruptedException {
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        return sendMail(mailDTO);
+        return sendMail(sendMailDTO);
     }
 
     public SmtpStatusCode authenticate(String username, String password) throws IOException {
@@ -74,8 +74,8 @@ public class SmtpController {
      * @param mailDTO 메일 정보를 담은 DTO
      * @return 전송 결과를 나타내는 SmtpStatusCode
      */
-    public SmtpStatusCode sendMail(MailDTO mailDTO) throws IOException, InterruptedException {
-        List<String> commands = SmtpCommand.createCommands(this.senderAddress, this.password, mailDTO);
+    public SmtpStatusCode sendMail(SendMailDTO sendMailDTO) throws IOException, InterruptedException {
+        List<String> commands = SmtpCommand.createCommands(this.senderAddress, this.password, sendMailDTO);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));

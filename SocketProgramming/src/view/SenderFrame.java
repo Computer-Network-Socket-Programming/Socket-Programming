@@ -1,7 +1,9 @@
 package view;
 
 import controller.SmtpController;
-import model.MailDTO;
+import model.DeliverMailDTO;
+import model.SendMailDTO;
+import model.ReplyMailDTO;
 import util.enums.SmtpStatusCode;
 
 import javax.swing.*;
@@ -11,6 +13,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
 
 public class SenderFrame extends JFrame {
 
@@ -19,6 +23,7 @@ public class SenderFrame extends JFrame {
     private final JTextArea messageArea;    // 본문 field
     private final ArrayList<File> attachedFiles;
 
+    // 새로운 메일 쓰기 버튼을 눌렀을 때 호출 되는 생성자
     public SenderFrame(String senderAddress, String password) {
         this.receiverField = new JTextField();
         this.subjectField = new JTextField();
@@ -26,11 +31,41 @@ public class SenderFrame extends JFrame {
         this.senderController = new SmtpController(senderAddress, password);
         this.attachedFiles = new ArrayList<>();
 
-        initPanel();
+        initFrame();
+
+        setTitle("Send Mail");
+        setSize(600, 600);
+        setVisible(true);
     }
 
-    // Class Panel 의 Layout 을 설정하고 form panel 과 button panel 을 추가하는 메소드
-    private void initPanel() {
+    // 전달 버튼을 눌렀을 때 호출 되는 생성자
+    public SenderFrame(String senderAddress, String password, DeliverMailDTO deliverMailDTO) {
+        this(senderAddress, password);
+
+        if (deliverMailDTO.subject() != null && !deliverMailDTO.subject().isEmpty()) {
+            this.subjectField.setText(deliverMailDTO.subject());
+        }
+        if (deliverMailDTO.content() != null && !deliverMailDTO.content().isEmpty()) {
+            this.messageArea.setText(deliverMailDTO.content());
+        }
+    }
+
+    // 답장 버튼을 눌렀을 때 호출 되는 생성자
+    public SenderFrame(String senderAddress, String password, ReplyMailDTO replyMailDTO) {
+        this(senderAddress, password);
+
+        if (replyMailDTO.recipient() != null && !replyMailDTO.recipient().isEmpty()) {
+            this.receiverField.setText(replyMailDTO.recipient());
+            this.receiverField.setEditable(false);
+        }
+
+        if (replyMailDTO.message() != null && !replyMailDTO.message().isEmpty()) {
+            this.messageArea.setText(replyMailDTO.message());
+        }
+    }
+
+    // Frame Class 의 Layout 을 설정하고 form panel 과 button panel 을 추가하는 메소드
+    private void initFrame() {
         setLayout(new BorderLayout());
         add(createFormPanel(), BorderLayout.CENTER);
         add(createCheckButton(), BorderLayout.SOUTH);
@@ -67,6 +102,7 @@ public class SenderFrame extends JFrame {
         JButton cancelButton = new JButton("취소");
 
         senderButton.addActionListener(e -> sendEmailOnClick());
+        cancelButton.addActionListener(e -> this.setVisible(false));
         buttonPanel.add(senderButton);
         buttonPanel.add(cancelButton);
         return buttonPanel;
@@ -122,26 +158,26 @@ public class SenderFrame extends JFrame {
      */
     private void selectFile(JTextArea filePathArea) {
         JFileChooser fileChooser = new JFileChooser();
+        StringBuilder fileNames = new StringBuilder();
+
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
         fileChooser.setMultiSelectionEnabled(true);
         int result = fileChooser.showOpenDialog(this);
 
         if (result == JFileChooser.APPROVE_OPTION) {
-            StringBuilder fileNames = new StringBuilder();
-
-            for (File file : fileChooser.getSelectedFiles()) {
-                this.attachedFiles.add(file);
-                fileNames.append(file.getName()).append("\n");
-            }
-
-            filePathArea.append(fileNames.toString());
+            this.attachedFiles.addAll(Arrays.asList(fileChooser.getSelectedFiles()));
         }
+
+        for (File file : attachedFiles) {
+            fileNames.append(file.getName()).append("\n");
+        }
+        filePathArea.append(fileNames.toString());
     }
 
     /*
-        * 파일 삭제 버튼을 클릭했을 때 호출되는 메소드
-        * attachedFiles 에 저장된 파일을 모두 삭제함
-        * filePathArea 의 내용을 삭제함
+     * 파일 삭제 버튼을 클릭했을 때 호출되는 메소드
+     * attachedFiles 에 저장된 파일을 모두 삭제함
+     * filePathArea 의 내용을 삭제함
      */
     private void deleteFile(JTextArea filePathArea) {
         if (this.attachedFiles.isEmpty()) return;
@@ -157,11 +193,12 @@ public class SenderFrame extends JFrame {
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
     private void sendEmailOnClick() {
-        MailDTO mailDTO = new MailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
+        String[] recipients = this.receiverField.getText().split(",");
+        SendMailDTO sendMailDTO = new SendMailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
         SmtpStatusCode statusCode;
 
         try {
-            statusCode = senderController.sendMail(mailDTO);
+            statusCode = senderController.sendMail(sendMailDTO);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
