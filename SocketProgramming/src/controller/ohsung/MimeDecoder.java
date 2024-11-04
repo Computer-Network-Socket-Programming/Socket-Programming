@@ -138,29 +138,4 @@ public class MimeDecoder {
             return "메일 내용을 디코딩하는 중 오류가 발생했습니다: " + e.getMessage();
         }
     }
-
-    /**
-     * 첨부 파일의 Base64 인코딩된 내용을 바이트 배열로 변환
-     */
-    public byte[] decodeAttachment(String body) {
-        try {
-            // Content-Transfer-Encoding: base64 이후의 내용 찾기
-            Pattern base64Pattern = Pattern.compile(
-                    "Content-Transfer-Encoding: base64\\r?\\n\\r?\\n([^\\r\\n]+)",
-                    Pattern.CASE_INSENSITIVE | Pattern.DOTALL
-            );
-            Matcher base64Matcher = base64Pattern.matcher(body);
-
-            if (base64Matcher.find()) {
-                // Base64 문자열에서 공백 제거
-                String base64Content = base64Matcher.group(1).replaceAll("\\s+", "");
-                // Base64 디코딩하여 바이트 배열 반환
-                return Base64.getDecoder().decode(base64Content);
-            }
-            return null;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 }

@@ -148,8 +148,8 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-        naverUserInfoDTO.setUsername("내 아이디");
-        naverUserInfoDTO.setPassword("내 비밀번호");
+        naverUserInfoDTO.setUsername("아이디");
+        naverUserInfoDTO.setPassword("비밀번호");
 
         createMainFrame();
     }
