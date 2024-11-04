@@ -11,7 +11,6 @@ import java.awt.event.ActionListener;
 import java.util.Objects;
 
 public class AccConnectView {
-
     private String nickname;
     private JComboBox<String> portalComboBox;
     private JTextField idField;
@@ -90,6 +89,8 @@ public class AccConnectView {
                             naverInfo.setPassword(userPassword);
 
                             System.out.println(naverInfo.getUsername() + "\n" + naverInfo.getPassword());
+
+                            accFrame.dispose();
                             MainView mainView = new MainView(nickname);
                             mainView.createMainFrame();
                             //

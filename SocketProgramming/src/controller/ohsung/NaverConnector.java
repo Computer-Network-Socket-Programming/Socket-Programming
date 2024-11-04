@@ -115,7 +115,7 @@ public class NaverConnector {
                 }
             }
 
-            if (line.contains("OK FETCH completed")) { // 모든 메일 데이터 수신 완료
+            if (line.toUpperCase().contains("OK") && line.toUpperCase().contains("FETCH")) {
                 break;
             }
         }
