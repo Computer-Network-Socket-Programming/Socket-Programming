@@ -1,6 +1,6 @@
 package view;
 
-import controller.SendingController;
+import controller.SmtpController;
 import model.MailDTO;
 import util.enums.SmtpStatusCode;
 
@@ -12,18 +12,18 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-public class SenderPanel extends JPanel {
+public class SenderFrame extends JFrame {
 
-    private final SendingController senderController;
+    private final SmtpController senderController;
     private final JTextField receiverField, subjectField;  // 받는사람, 제목 field
     private final JTextArea messageArea;    // 본문 field
     private final ArrayList<File> attachedFiles;
 
-    public SenderPanel(String senderAddress, String password) {
+    public SenderFrame(String senderAddress, String password) {
         this.receiverField = new JTextField();
         this.subjectField = new JTextField();
         this.messageArea = new JTextArea();
-        this.senderController = new SendingController(senderAddress, password);
+        this.senderController = new SmtpController(senderAddress, password);
         this.attachedFiles = new ArrayList<>();
 
         initPanel();
@@ -66,7 +66,7 @@ public class SenderPanel extends JPanel {
         JButton senderButton = new JButton("보내기");
         JButton cancelButton = new JButton("취소");
 
-        senderButton.addActionListener(e -> sendEmail());
+        senderButton.addActionListener(e -> sendEmailOnClick());
         buttonPanel.add(senderButton);
         buttonPanel.add(cancelButton);
         return buttonPanel;
@@ -156,7 +156,7 @@ public class SenderPanel extends JPanel {
      * controller 의 sendMail method 를 호출하여 메일을 전송함
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
-    private void sendEmail() {
+    private void sendEmailOnClick() {
         MailDTO mailDTO = new MailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
         SmtpStatusCode statusCode;
 

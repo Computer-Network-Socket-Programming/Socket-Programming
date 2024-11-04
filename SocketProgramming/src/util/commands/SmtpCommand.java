@@ -19,6 +19,7 @@ public class SmtpCommand {
         commands.add("AUTH LOGIN" + "\r\n");
         commands.add(encodeText(senderAddress.getBytes()) + "\r\n");
         commands.add(encodeText(password.getBytes()) + "\r\n");
+        commands.add("QUIT\r\n");
         return commands;
     }
 
@@ -33,6 +34,8 @@ public class SmtpCommand {
     public static ArrayList<String> createCommands(String senderAddress, String password, MailDTO mailDTO) throws IOException {
         String boundary = "----=_NextPart_" + System.currentTimeMillis();
         ArrayList<String> commands = new ArrayList<>(createAuthCommands(senderAddress, password));
+
+        commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");
         commands.add("RCPT TO:<" + mailDTO.recipient() + ">\r\n");
         commands.add("DATA\r\n");

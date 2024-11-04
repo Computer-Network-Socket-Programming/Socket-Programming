@@ -10,12 +10,12 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.util.List;
 
-public class SendingController {
+public class SmtpController {
 
     private final String senderAddress, password;
     private final MailPlatform smtpServer;
 
-    public SendingController(String senderAddress, String password) {
+    public SmtpController(String senderAddress, String password) {
         this.password = password;
         this.senderAddress = senderAddress;
 
@@ -34,6 +34,39 @@ public class SendingController {
             throw new RuntimeException(e);
         }
         return sendMail(mailDTO);
+    }
+
+    public SmtpStatusCode authenticate(String username, String password) throws IOException {
+        List<String> commands = SmtpCommand.createAuthCommands(username, password);
+        SSLSocket sslSocket = createSSLSocket();
+        DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
+        BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
+        String responseValue = inFromServer.readLine(); // 서버 응답 확인
+
+        System.out.println("Response: " + responseValue);
+
+        for(String command : commands) {
+            // 명령어 전송
+            outToServer.writeBytes(command);
+            outToServer.flush(); // 명령 전송 후 플러시하여 보냄
+            System.out.println("SmtpCommand: " + command);
+
+            responseValue = inFromServer.readLine(); // 서버 응답 확인
+            String statusCode = responseValue.split(" ")[0];
+            System.out.println("Response: " + responseValue);
+
+            // 예외 처리
+            if (statusCode.equals("535")) {
+                return SmtpStatusCode.NOT_ACCEPTED;
+            }
+
+            // 그 이외의 예외 처리
+            if (responseValue.startsWith("5")) {
+                return SmtpStatusCode.NOT_ACCEPTED;
+            }
+        }
+
+        return SmtpStatusCode.SERVICE_CLOSING;
     }
 
     /*
@@ -86,12 +119,8 @@ public class SendingController {
 
                 // 그 이외의 예외 처리
                 if (responseValue.startsWith("5")) {
-                    System.out.println("========================================");
-                    System.out.println("Error: " + responseValue);
                     return SmtpStatusCode.SYNTAX_ERROR;
                 } else if (responseValue.startsWith("4")) {
-                    System.out.println("========================================");
-                    System.out.println("Error: " + responseValue);
                     return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
                 }
             }
