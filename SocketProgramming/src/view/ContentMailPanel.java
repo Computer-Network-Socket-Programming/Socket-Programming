@@ -1,13 +1,15 @@
 package view;
 
-import view.MailInfo;
+import main.SendMailFrame;
+import model.ReplyMailDTO;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
-public class MailDetailPanel extends JPanel {
+public class ContentMailPanel extends JPanel {
     ArrayList<String> dummydatas = new ArrayList<>();
     MailInfo mailInfo;
     JLabel senderLabel, receiverLabel, dateLabel, subjectLabel, contentLabel;
@@ -15,10 +17,16 @@ public class MailDetailPanel extends JPanel {
     JTextArea content;
     JScrollPane contentScroll;
     JButton mailListButton;
+    JButton replyMailButton;
     BorderLayout borderLayout;
     GridLayout gridLayout;
+    SenderPanel senderPanel;
+    SendMailFrame mainFrame;
 
-    public MailDetailPanel(CardLayout cardLayout, JPanel parentPanel) {
+    public ContentMailPanel(CardLayout cardLayout, JPanel parentPanel) {
+
+
+        this.senderPanel = senderPanel;
 
         borderLayout = new BorderLayout();
         gridLayout = new GridLayout(0,2);
@@ -41,7 +49,7 @@ public class MailDetailPanel extends JPanel {
         senderLabel = new JLabel("보낸 사람:", JLabel.RIGHT);
         receiverLabel = new JLabel("받는 사람:", JLabel.RIGHT);
         dateLabel = new JLabel("날짜:", JLabel.RIGHT);
-        contentLabel = new JLabel("내용:", JLabel.LEFT);
+        contentLabel = new JLabel("내용", JLabel.LEFT);
 
 
 
@@ -72,7 +80,6 @@ public class MailDetailPanel extends JPanel {
         mailDetailPanel.add(contentLabel);
 
 
-
         content = new JTextArea(5, 20);
         content.setEditable(false);
         content.setLineWrap(true);
@@ -83,8 +90,13 @@ public class MailDetailPanel extends JPanel {
         contentScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 
         add(contentScroll,BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(gridLayout);
+        add(buttonPanel,BorderLayout.SOUTH);
+
         mailListButton = new JButton("목록으로 돌아가기");
-        add(mailListButton,BorderLayout.SOUTH);
+        buttonPanel.add(mailListButton,gridLayout);
         mailListButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -92,9 +104,32 @@ public class MailDetailPanel extends JPanel {
                     cardLayout.show(parentPanel, "MailListPanel");
                 }
             }
+        });
+        replyMailButton = new JButton("답장");
+        buttonPanel.add(replyMailButton,gridLayout);
+        replyMailButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == replyMailButton) {
+                    String sender = mailInfo.getSender();
+                    String receiver = mailInfo.getReceiver();
+                    String content = mailInfo.getContent();
+                    if (sender == null || sender.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "보낸 사람 주소가 유효하지 않습니다.");
+                        return;
+                    }
+                    if (receiver == null || receiver.isEmpty()) {
+                        JOptionPane.showMessageDialog(null,"받는 사람 주소가 유효하지 않습니다.");
+                        return;
+                    }
+                    if (content == null || content.isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "내용이 존재하지 않습니다.");
+                    }
 
-
-
+                    ReplyMailDTO replyMailDTO = new ReplyMailDTO("Re:   "+ receiver, "-----Original Message-----\n\n" + content +"\n\n");
+                    new SendMailFrame(replyMailDTO);
+                }
+            }
         });
     }
 
