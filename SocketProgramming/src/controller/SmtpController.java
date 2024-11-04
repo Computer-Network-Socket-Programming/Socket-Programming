@@ -13,7 +13,7 @@ import java.util.List;
 public class SmtpController {
 
     private final String senderAddress, password;
-    private final MailPlatform smtpServer;
+    private final MailPlatform mailPlatform;
 
     public SmtpController(String senderAddress, String password) {
         this.password = password;
@@ -21,9 +21,9 @@ public class SmtpController {
 
         // 이메일 주소의 도메인에 따라 SMTP 서버를 결정
         switch (senderAddress.split("@")[1]) {
-            case "naver.com" -> this.smtpServer = MailPlatform.NAVER;
-            case "google.com" -> this.smtpServer = MailPlatform.GMAIL;
-            default -> this.smtpServer = null;
+            case "naver.com" -> this.mailPlatform = MailPlatform.NAVER;
+            case "google.com" -> this.mailPlatform = MailPlatform.GMAIL;
+            default -> this.mailPlatform = null;
         }
     }
 
@@ -71,7 +71,7 @@ public class SmtpController {
 
     /*
      * 메일을 전송하는 메소드
-     * @param mailDTO 메일 정보를 담은 DTO
+     * @param sendMailDTO 메일 정보를 담은 DTO
      * @return 전송 결과를 나타내는 SmtpStatusCode
      */
     public SmtpStatusCode sendMail(SendMailDTO sendMailDTO) throws IOException, InterruptedException {
@@ -139,6 +139,6 @@ public class SmtpController {
      */
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        return (SSLSocket) sslSocketFactory.createSocket(this.smtpServer.getSmtpServer(), 465);
+        return (SSLSocket) sslSocketFactory.createSocket(this.mailPlatform.getSmtpServer(), 465);
     }
 }

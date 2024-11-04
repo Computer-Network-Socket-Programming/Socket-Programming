@@ -27,7 +27,7 @@ public class SmtpCommand {
      * 이메일 전송 명령어 생성
      * @param senderAddress 발신자 이메일 주소
      * @param password 발신자 이메일 비밀번호
-     * @param mailDTO 메일 정보를 담은 DTO
+     * @param sendMailDTO 메일 정보를 담은 DTO
      * @return SMTP 명령어 목록
      * createAuthCommands 메소드를 통해 SMTP 인증 명령어 생성
      */
@@ -37,12 +37,12 @@ public class SmtpCommand {
 
         commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");
-        commands.add("RCPT TO:<" + sendMailDTO.recipient() + ">\r\n");
+        commands.add("RCPT TO:<" + sendMailDTO.recipients() + ">\r\n");
         commands.add("DATA\r\n");
 
         // 이메일 헤더 설정
         commands.add("Subject: =?utf-8?B?" + encodeText(sendMailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
-        commands.add("To: " + sendMailDTO.recipient() + "\r\n");
+        commands.add("To: " + sendMailDTO.recipients() + "\r\n");
         commands.add("From: " + senderAddress + "\r\n");
         commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
         commands.add("\r\n");
