@@ -55,11 +55,13 @@ public class NaverConnector {
         List<String[]> mails = new ArrayList<>();
 
         // 첫 20개의 메일 헤더 정보를 요청
-        sendCommand("a003 FETCH 980:1000 (BODY[HEADER.FIELDS (FROM SUBJECT DATE)])");
+        sendCommand("a003 FETCH 980:1000 (BODY[HEADER.FIELDS (FROM SUBJECT DATE)] BODY[TEXT])");
 
         String line;
         String from = "", subject = "", date = "", body = "", mailId = "";
         boolean isReadingMail = false;
+        boolean isReadingBody = false;
+        StringBuilder bodyBuilder = new StringBuilder();
         long lastNoopTime = System.currentTimeMillis();
 
         while ((line = reader.readLine()) != null) {
@@ -91,12 +93,26 @@ public class NaverConnector {
                 date = line.substring(line.indexOf("Date:") + 5).trim();
                 date = MimeDecoder.getInstance().decodeMimeText(date);
                 System.out.println("날짜 파싱: " + date);
-            } else if (isReadingMail && line.equals(")")) {
-                // 메일 본문 가져오기
-                System.out.println("본문 파싱 : " + body);
-                mails.add(new String[]{from, subject, date, body});
-                from = subject = date = body = mailId = ""; // 초기화
-                isReadingMail = false;
+            } else if (isReadingMail && line.contains("BODY[TEXT]")) {
+                isReadingBody = true;
+                bodyBuilder = new StringBuilder();
+                // 본문 시작 부분이 같은 줄에 있을 경우
+                String bodyStart = MimeDecoder.getInstance().extractBodyFromFetch(line);
+                if (!bodyStart.isEmpty()) {
+                    bodyBuilder.append(bodyStart);
+                }
+            } else if (isReadingBody) {
+                if (line.equals(")")) {
+                    body = MimeDecoder.getInstance().parseEmailBody(bodyBuilder.toString());
+                    isReadingBody = false;
+
+                    // 메일 데이터 저장
+                    mails.add(new String[]{from, subject, date, body});
+                    from = subject = date = body = mailId = "";
+                    isReadingMail = false;
+                } else {
+                    bodyBuilder.append(line).append("\n");
+                }
             }
 
             if (line.contains("OK FETCH completed")) { // 모든 메일 데이터 수신 완료

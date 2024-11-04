@@ -1,6 +1,8 @@
 package view.ohsung;
 
+import controller.ohsung.NaverConnector;
 import model.ohsung.EmailDataRepository;
+import model.ohsung.NaverUserInfoDTO;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -21,9 +23,13 @@ public class MainView {
     private JLabel subjectLabel;
     private JLabel timeLabel;
     private JTextArea messageContent;
+    private JPanel loadingPanel;
+    private NaverUserInfoDTO naverUserInfoDTO;
+    private NaverConnector naverConnector;
 
     public MainView(String userId) {
         this.userId = userId;
+        this.naverUserInfoDTO = new NaverUserInfoDTO();
     }
 
     public void createMainFrame() {
@@ -35,10 +41,67 @@ public class MainView {
 
         JPanel topPanel = createTopPanel();
         mainFrame.add(topPanel, BorderLayout.NORTH);
-        JSplitPane splitPane = createSplitPane();
-        mainFrame.add(splitPane, BorderLayout.CENTER);
+
+        checkUserInfo(mainFrame);
 
         mainFrame.setVisible(true);
+    }
+
+    private void checkUserInfo(JFrame mainFrame){
+        if(naverUserInfoDTO.getUsername() == null || naverUserInfoDTO.getPassword() == null){
+            JLabel promptLabel = new JLabel("이메일 인증을 완료해주세요");
+            mainFrame.add(promptLabel, BorderLayout.CENTER);
+        } else{
+            showLoadingPanel(mainFrame);
+            loadNaverEmailsInBackground(mainFrame);
+        }
+    }
+
+    private void showLoadingPanel(JFrame mainFrame){
+        loadingPanel = new JPanel();
+        JLabel loadingLabel = new JLabel("메일을 불러오는 중입니다...");
+        loadingPanel.add(loadingLabel);
+        mainFrame.add(loadingPanel, BorderLayout.CENTER);
+
+        mainFrame.revalidate();
+        mainFrame.repaint();
+    }
+
+    private void loadNaverEmailsInBackground(JFrame mainFrame) {
+        // 백그라운드에서 메일을 로드하는 작업 실행
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                getNaverEmails();
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                // 로딩 패널 제거 및 메일 목록 UI 표시
+                mainFrame.remove(loadingPanel);
+                JSplitPane splitPane = createSplitPane();
+                mainFrame.add(splitPane, BorderLayout.CENTER);
+
+                mainFrame.revalidate();
+                mainFrame.repaint();
+            }
+        };
+        worker.execute();
+    }
+
+    private void getNaverEmails(){
+        try{
+            String username = naverUserInfoDTO.getUsername();
+            String password = naverUserInfoDTO.getPassword();
+
+            NaverConnector naverConnector = new NaverConnector(username, password);
+            naverConnector.fetchMails();
+            naverConnector.disconnect();
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private JPanel createTopPanel(){
@@ -85,7 +148,10 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
+        naverUserInfoDTO.setUsername("내 아이디");
+        naverUserInfoDTO.setPassword("내 비밀번호");
 
+        createMainFrame();
     }
 
 
@@ -112,7 +178,7 @@ public class MainView {
 
     private void updateInBoxNaver(List<String[]> mails){
         for (String[] mail : EmailDataRepository.getInstance().getMailData()) {
-            mails.add(new String[]{mail[0], mail[1], mail[2]});
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3]});
         }
     }
 
@@ -185,7 +251,7 @@ public class MainView {
                     int index = mailList.getSelectedIndex();
                     if (index >= 0) {
                         String[] value = mailList.getModel().getElementAt(index);
-                        updateDetailPanel(value[0], value[1], value[2]);
+                        updateDetailPanel(value[0], value[1], value[2], value[3]);
                         cardLayout.show(cardPanel, "detailPanel");
                     }
                 }
@@ -218,11 +284,11 @@ public class MainView {
         return detailPanel;
     }
 
-    private void updateDetailPanel(String sender, String subject, String time) {
+    private void updateDetailPanel(String sender, String subject, String time, String text) {
         senderLabel.setText("보낸 사람: " + sender);
         subjectLabel.setText("제목: " + subject);
         timeLabel.setText("시간: " + time);
-        messageContent.setText("메일 내용 표시...");  // 실제 메일 내용을 여기에 표시할 수 있습니다.
+        messageContent.setText("메일 내용 표시..." + text);  // 실제 메일 내용을 여기에 표시할 수 있습니다.
     }
 
     private JSplitPane createSplitPane() {
