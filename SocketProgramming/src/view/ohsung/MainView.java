@@ -3,6 +3,7 @@ package view.ohsung;
 import controller.ohsung.NaverConnector;
 import model.ohsung.EmailDataRepository;
 import model.ohsung.NaverUserInfoDTO;
+import view.AccConnectView;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -17,23 +18,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainView {
-    private String userId;
+    private String nickname;
     private JPanel detailPanel;
     private JLabel senderLabel;
     private JLabel subjectLabel;
     private JLabel timeLabel;
     private JTextArea messageContent;
     private JPanel loadingPanel;
-    private NaverUserInfoDTO naverUserInfoDTO;
+    private NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
     private NaverConnector naverConnector;
 
-    public MainView(String userId) {
-        this.userId = userId;
-        this.naverUserInfoDTO = new NaverUserInfoDTO();
+    public MainView(String nickname) {
+        this.nickname = nickname;
+//        this.naverUserInfoDTO = new NaverUserInfoDTO();
     }
 
     public void createMainFrame() {
-        JFrame mainFrame = new JFrame("환영합니다 " + userId + "님!!");
+        JFrame mainFrame = new JFrame("환영합니다 " + nickname + "님!!");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         mainFrame.setSize(1200, 700);
@@ -148,10 +149,15 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-        naverUserInfoDTO.setUsername("아이디");
-        naverUserInfoDTO.setPassword("비밀번호");
 
-        createMainFrame();
+        AccConnectView accConnectView = new AccConnectView(nickname);
+        accConnectView.createAccConnectView();
+
+//        naverUserInfoDTO.setUsername("99doldol@naver.com");
+//        naverUserInfoDTO.setPassword("@rnjsdhtjd99");
+
+//        System.out.println("일로옴");
+//        createMainFrame();
     }
 
 

@@ -7,8 +7,8 @@ import view.ohsung.MainView;
 public class Main {
 
     public static void main(String[] args) {
-        String userId = "오성";
-        MainView mainView = new MainView(userId);
+        String nickname = "오성";
+        MainView mainView = new MainView(nickname);
         mainView.createMainFrame();
     }
 }
