@@ -2,7 +2,7 @@ package view;
 
 import controller.SmtpController;
 import model.DeliverMailDTO;
-import model.MailDTO;
+import model.SendMailDTO;
 import model.ReplyMailDTO;
 import util.enums.SmtpStatusCode;
 
@@ -14,7 +14,6 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 
 public class SenderFrame extends JFrame {
 
@@ -47,9 +46,6 @@ public class SenderFrame extends JFrame {
         }
         if (deliverMailDTO.content() != null && !deliverMailDTO.content().isEmpty()) {
             this.messageArea.setText(deliverMailDTO.content());
-        }
-        if (deliverMailDTO.attachedFiles() != null && !deliverMailDTO.attachedFiles().isEmpty()) {
-            this.attachedFiles.addAll(deliverMailDTO.attachedFiles());
         }
     }
 
@@ -105,6 +101,7 @@ public class SenderFrame extends JFrame {
         JButton cancelButton = new JButton("취소");
 
         senderButton.addActionListener(e -> sendEmailOnClick());
+        cancelButton.addActionListener(e -> this.setVisible(false));
         buttonPanel.add(senderButton);
         buttonPanel.add(cancelButton);
         return buttonPanel;
@@ -196,11 +193,11 @@ public class SenderFrame extends JFrame {
      */
     private void sendEmailOnClick() {
         String[] recipients = this.receiverField.getText().split(",");
-        MailDTO mailDTO = new MailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
+        SendMailDTO sendMailDTO = new SendMailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
         SmtpStatusCode statusCode;
 
         try {
-            statusCode = senderController.sendMail(mailDTO);
+            statusCode = senderController.sendMail(sendMailDTO);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
@@ -217,10 +214,5 @@ public class SenderFrame extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
-    }
-
-    public static void main(String[] args) {
-        Map<String, String> env = System.getenv();
-        new SenderFrame(env.get("USER_NAME"), env.get("PASSWORD"));
     }
 }

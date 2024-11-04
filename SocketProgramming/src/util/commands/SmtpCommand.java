@@ -1,6 +1,6 @@
 package util.commands;
 
-import model.MailDTO;
+import model.SendMailDTO;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,22 +27,22 @@ public class SmtpCommand {
      * 이메일 전송 명령어 생성
      * @param senderAddress 발신자 이메일 주소
      * @param password 발신자 이메일 비밀번호
-     * @param mailDTO 메일 정보를 담은 DTO
+     * @param sendMailDTO 메일 정보를 담은 DTO
      * @return SMTP 명령어 목록
      * createAuthCommands 메소드를 통해 SMTP 인증 명령어 생성
      */
-    public static ArrayList<String> createCommands(String senderAddress, String password, MailDTO mailDTO) throws IOException {
+    public static ArrayList<String> createCommands(String senderAddress, String password, SendMailDTO sendMailDTO) throws IOException {
         String boundary = "----=_NextPart_" + System.currentTimeMillis();
         ArrayList<String> commands = new ArrayList<>(createAuthCommands(senderAddress, password));
 
         commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");
-        commands.add("RCPT TO:<" + mailDTO.recipient() + ">\r\n");
+        commands.add("RCPT TO:<" + sendMailDTO.recipients() + ">\r\n");
         commands.add("DATA\r\n");
 
         // 이메일 헤더 설정
-        commands.add("Subject: =?utf-8?B?" + encodeText(mailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
-        commands.add("To: " + mailDTO.recipient() + "\r\n");
+        commands.add("Subject: =?utf-8?B?" + encodeText(sendMailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
+        commands.add("To: " + sendMailDTO.recipients() + "\r\n");
         commands.add("From: " + senderAddress + "\r\n");
         commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
         commands.add("\r\n");
@@ -51,10 +51,10 @@ public class SmtpCommand {
         commands.add("--" + boundary + "\r\n");
         commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
         commands.add("Content-Transfer-Encoding: base64\r\n");
-        commands.add("\r\n" + encodeText(mailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
+        commands.add("\r\n" + encodeText(sendMailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
 
         // 첨부 파일 추가
-        for (File file : mailDTO.attachedFiles()) {
+        for (File file : sendMailDTO.attachedFiles()) {
             String encodedFileName = "=?utf-8?B?" + encodeText(file.getName().getBytes(StandardCharsets.UTF_8)) + "?=";
             commands.add("--" + boundary + "\r\n");
             commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + encodedFileName + "\"\r\n");
