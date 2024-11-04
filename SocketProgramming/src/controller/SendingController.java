@@ -7,6 +7,7 @@ import util.SmtpStatusCode;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -96,42 +97,36 @@ public class SendingController {
         commands.add("AUTH LOGIN" + "\r\n");
         commands.add(Base64.getEncoder().encodeToString(this.senderAddress.getBytes()) + "\r\n");
         commands.add(Base64.getEncoder().encodeToString(this.password.getBytes()) + "\r\n");
-        commands.add("MAIL FROM:<" + this.senderAddress + ">" + "\r\n");
-        commands.add("RCPT TO:<" + mailDTO.recipient() + ">" + "\r\n");
-        commands.add("DATA" + "\r\n");
+        commands.add("MAIL FROM:<" + this.senderAddress + ">\r\n");
+        commands.add("RCPT TO:<" + mailDTO.recipient() + ">\r\n");
+        commands.add("DATA\r\n");
 
-        // 첨부 파일이 없고 본문만 있는 경우
-        if (mailDTO.attachedFiles() == null || mailDTO.attachedFiles().isEmpty()) {
-            commands.add("Subject: " + mailDTO.subject() + "\r\n");
-            commands.add("To: " + mailDTO.recipient() + "\r\n");
-            commands.add("From: " + this.senderAddress + "\r\n");
-            commands.add("\r\n");
-            commands.add(mailDTO.message());
-        }
-        // 첨부파일이 있는 경우 multipart/mixed 로 생성
-        else {
-            // 헤더와 본문
-            commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
-            commands.add("\r\n--" + boundary + "\r\n");
-            commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
-            commands.add("Content-Transfer-Encoding: 7bit\r\n");
-            commands.add("\r\n" + mailDTO.message() + "\r\n");
+        // 이메일 헤더 설정
+        commands.add("Subject: " + encodeSubject(mailDTO.subject()) + "\r\n");
+        commands.add("To: " + mailDTO.recipient() + "\r\n");
+        commands.add("From: " + this.senderAddress + "\r\n");
+        commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
+        commands.add("\r\n");
 
-            // 파일 첨부
-            for (File file : mailDTO.attachedFiles()) {
-                commands.add("--" + boundary + "\r\n");
-                commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + file.getName() + "\"\r\n");
-                commands.add("Content-Transfer-Encoding: base64\r\n");
-                commands.add("Content-Disposition: attachment; filename=\"" + file.getName() + "\"\r\n");
-                commands.add("\r\n" + encodeFile(file) + "\r\n");
-            }
+        // 본문 시작
+        commands.add("--" + boundary + "\r\n");
+        commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
+        commands.add("Content-Transfer-Encoding: base64\r\n");
+        commands.add("\r\n" + Base64.getEncoder().encodeToString(mailDTO.message().getBytes("UTF-8")) + "\r\n");
 
-            // 종료 부분
-            commands.add("--" + boundary + "--\r\n");
+        // 첨부 파일 추가
+        for (File file : mailDTO.attachedFiles()) {
+            commands.add("--" + boundary + "\r\n");
+            commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + file.getName() + "\"\r\n");
+            commands.add("Content-Transfer-Encoding: base64\r\n");
+            commands.add("Content-Disposition: attachment; filename=\"" + file.getName() + "\"\r\n");
+            commands.add("\r\n" + encodeFile(file) + "\r\n");
         }
 
+        // 종료 boundary 추가
+        commands.add("--" + boundary + "--\r\n");
         commands.add("\r\n.\r\n");
-        commands.add("QUIT" + "\r\n");
+        commands.add("QUIT\r\n");
         return commands;
     }
 
@@ -147,6 +142,12 @@ public class SendingController {
         return "application/octet-stream"; // 기본값은 바이너리 파일로 가정
     }
 
+    // 제목을 Base64로 인코딩하는 메서드
+    private String encodeSubject(String subject) throws UnsupportedEncodingException {
+        return "=?utf-8?B?" + Base64.getEncoder().encodeToString(subject.getBytes("UTF-8")) + "?=";
+    }
+
+    // 파일을 Base64로 인코딩
     private String encodeFile(File file) throws IOException {
         byte[] fileContent = new byte[(int) file.length()];
         FileInputStream fileInputStream = new FileInputStream(file);
