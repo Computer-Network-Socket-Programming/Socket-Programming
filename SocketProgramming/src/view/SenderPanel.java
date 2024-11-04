@@ -19,7 +19,6 @@ public class SenderPanel extends JPanel {
     private final JTextArea messageArea;    // 본문 field
     private final ArrayList<File> attachedFiles;
 
-
     public SenderPanel(String senderAddress, String password) {
         this.receiverField = new JTextField();
         this.subjectField = new JTextField();
@@ -100,20 +99,23 @@ public class SenderPanel extends JPanel {
     private JPanel createFileSelectionPanel() {
         JPanel result = new JPanel(new BorderLayout());
         JButton fileSelectionButton = new JButton("파일 선택");
+        JButton fileDeleteButton = new JButton("파일 삭제");
         JTextArea filePathArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(filePathArea);
 
         fileSelectionButton.addActionListener(e -> selectFile(filePathArea));
+        fileDeleteButton.addActionListener(e -> deleteFile(filePathArea));
 
         result.add(fileSelectionButton, BorderLayout.WEST);
+        result.add(fileDeleteButton, BorderLayout.EAST);
         result.add(scrollPane, BorderLayout.CENTER);
         return result;
     }
 
     /*
-        * 파일 선택 버튼을 클릭했을 때 호출되는 메소드
-        * JFileChooser 를 이용하여 파일을 선택하고 선택된 파일을 attachedFiles 에 추가함
-        * 선택된 파일의 이름을 filePathArea 에 추가함
+     * 파일 선택 버튼을 클릭했을 때 호출되는 메소드
+     * JFileChooser 를 이용하여 파일을 선택하고 선택된 파일을 attachedFiles 에 추가함
+     * 선택된 파일의 이름을 filePathArea 에 추가함
      */
     private void selectFile(JTextArea filePathArea) {
         JFileChooser fileChooser = new JFileChooser();
@@ -131,6 +133,18 @@ public class SenderPanel extends JPanel {
 
             filePathArea.append(fileNames.toString());
         }
+    }
+
+    /*
+        * 파일 삭제 버튼을 클릭했을 때 호출되는 메소드
+        * attachedFiles 에 저장된 파일을 모두 삭제함
+        * filePathArea 의 내용을 삭제함
+     */
+    private void deleteFile(JTextArea filePathArea) {
+        if (this.attachedFiles.isEmpty()) return;
+
+        this.attachedFiles.clear();
+        filePathArea.setText("");
     }
 
     /*
