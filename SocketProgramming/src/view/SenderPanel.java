@@ -2,7 +2,7 @@ package view;
 
 import controller.SendingController;
 import model.MailDTO;
-import util.SmtpStatusCode;
+import util.enums.SmtpStatusCode;
 
 import javax.swing.*;
 import java.awt.*;

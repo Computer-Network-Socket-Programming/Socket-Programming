@@ -1,4 +1,4 @@
-package util;
+package util.enums;
 
 public enum SmtpStatusCode {
     SERVICE_CLOSING(221, "서버와의 연결이 종료되었습니다"),

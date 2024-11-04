@@ -1,8 +1,9 @@
 package controller;
 
 import model.MailDTO;
-import util.MailPlatform;
-import util.SmtpStatusCode;
+import util.commands.Command;
+import util.enums.MailPlatform;
+import util.enums.SmtpStatusCode;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -37,7 +38,7 @@ public class SendingController {
      * @return 전송 결과를 나타내는 SmtpStatusCode
      */
     public SmtpStatusCode sendMail(MailDTO mailDTO) throws IOException, InterruptedException {
-        List<String> commands = createCommands(mailDTO);
+        List<String> commands = Command.createCommands(this.senderAddress, this.password, mailDTO);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
@@ -101,75 +102,5 @@ public class SendingController {
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
         return (SSLSocket) sslSocketFactory.createSocket(this.smtpServer.getSmtpServer(), this.port);
-    }
-
-    // SMTP 명령어 생성
-    private ArrayList<String> createCommands(MailDTO mailDTO) throws IOException {
-        String boundary = "----=_NextPart_" + System.currentTimeMillis();
-        ArrayList<String> commands = new ArrayList<>();
-
-        // SMTP 명령어 생성
-        commands.add("HELO " + this.senderAddress + "\r\n");
-        commands.add("AUTH LOGIN" + "\r\n");
-        commands.add(encodeText(this.senderAddress.getBytes()) + "\r\n");
-        commands.add(encodeText(this.password.getBytes()) + "\r\n");
-        commands.add("MAIL FROM:<" + this.senderAddress + ">\r\n");
-        commands.add("RCPT TO:<" + mailDTO.recipient() + ">\r\n");
-        commands.add("DATA\r\n");
-
-        // 이메일 헤더 설정
-        commands.add("Subject: =?utf-8?B?" + encodeText(mailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
-        commands.add("To: " + mailDTO.recipient() + "\r\n");
-        commands.add("From: " + this.senderAddress + "\r\n");
-        commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
-        commands.add("\r\n");
-
-        // 본문 시작
-        commands.add("--" + boundary + "\r\n");
-        commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
-        commands.add("Content-Transfer-Encoding: base64\r\n");
-        commands.add("\r\n" + encodeText(mailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
-
-        // 첨부 파일 추가
-        for (File file : mailDTO.attachedFiles()) {
-            String encodedFileName = "=?utf-8?B?" + encodeText(file.getName().getBytes(StandardCharsets.UTF_8)) + "?=";
-            commands.add("--" + boundary + "\r\n");
-            commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + encodedFileName + "\"\r\n");
-            commands.add("Content-Transfer-Encoding: base64\r\n");
-            commands.add("Content-Disposition: attachment; filename=\"" + encodedFileName + "\"\r\n");
-            commands.add("\r\n" + encodeFile(file) + "\r\n");
-        }
-
-        // 종료 boundary 추가
-        commands.add("--" + boundary + "--\r\n");
-        commands.add("\r\n.\r\n");
-        commands.add("QUIT\r\n");
-        return commands;
-    }
-
-    // 파일 확장자 별로 MIME 타입을 반환
-    private String getMimeType(File file) {
-        if (file.getName().endsWith(".jpg") || file.getName().endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (file.getName().endsWith(".png")) {
-            return "image/png";
-        } else if (file.getName().endsWith(".pdf")) {
-            return "application/pdf";
-        }
-        return "application/octet-stream"; // 기본값은 바이너리 파일로 가정
-    }
-
-    private String encodeText(byte[] text) {
-        return Base64.getEncoder().encodeToString(text);
-
-    }
-
-    // 파일을 Base64로 인코딩
-    private String encodeFile(File file) throws IOException {
-        byte[] fileContent = new byte[(int) file.length()];
-        FileInputStream fileInputStream = new FileInputStream(file);
-
-        fileInputStream.read(fileContent);
-        return Base64.getEncoder().encodeToString(fileContent);
     }
 }

@@ -1,4 +1,4 @@
-package util;
+package util.enums;
 
 public enum MailPlatform {
     NAVER("smtp.naver.com"),
