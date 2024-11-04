@@ -156,7 +156,7 @@ public class SenderPanel extends JPanel {
         }
 
         if (statusCode != SmtpStatusCode.SERVICE_CLOSING) {
-            JOptionPane.showMessageDialog(this, "메일 전송에 실패했습니다.");
+            JOptionPane.showMessageDialog(this, statusCode.getDescription());
             return;
         }
 

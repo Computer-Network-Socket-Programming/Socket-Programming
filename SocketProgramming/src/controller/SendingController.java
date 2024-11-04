@@ -74,9 +74,6 @@ public class SendingController {
             }
         }
 
-        responseValue = inFromServer.readLine(); // 서버 응답 확인
-        System.out.println("Response: " + responseValue);
-
         inFromServer.close();
         outToServer.close();
         sslSocket.close();
