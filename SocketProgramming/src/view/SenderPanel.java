@@ -41,17 +41,20 @@ public class SenderPanel extends JPanel {
      * form panel 은 4개의 text field 로 구성되어 있음
      */
     private JPanel createFormPanel() {
-        JPanel formPanel = new JPanel(new GridLayout(4, 1));
+        JPanel mainPanel = new JPanel(new GridLayout(2, 1));
+        JPanel formPanel = new JPanel(new GridLayout(3, 1));
+
+        JPanel subjectField = createTextField("                제목:", this.subjectField);
         JPanel receiverField = createTextField("받는 사람 이메일:", this.receiverField);
-        JPanel subjectField = createTextField("제목:", this.subjectField);
-        JPanel messageField = createTextArea("메시지:", this.messageArea);
         JPanel fileSelectionPanel = createFileSelectionPanel();
+        JPanel messageField = createTextArea("             메시지:", this.messageArea);
 
         formPanel.add(receiverField);
         formPanel.add(subjectField);
-        formPanel.add(messageField);
         formPanel.add(fileSelectionPanel);
-        return formPanel;
+        mainPanel.add(formPanel);
+        mainPanel.add(messageField);
+        return mainPanel;
     }
 
     /*
