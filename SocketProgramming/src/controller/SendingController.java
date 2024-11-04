@@ -1,26 +1,21 @@
 package controller;
 
 import model.MailDTO;
-import util.commands.Command;
+import util.commands.SmtpCommand;
 import util.enums.MailPlatform;
 import util.enums.SmtpStatusCode;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class SendingController {
 
-    private final int port;
     private final String senderAddress, password;
     private final MailPlatform smtpServer;
 
     public SendingController(String senderAddress, String password) {
-        this.port = 465;    // SSL 포트
         this.password = password;
         this.senderAddress = senderAddress;
 
@@ -32,13 +27,22 @@ public class SendingController {
         }
     }
 
+    public SmtpStatusCode scheduleEmailSend(MailDTO mailDTO) throws IOException, InterruptedException {
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return sendMail(mailDTO);
+    }
+
     /*
      * 메일을 전송하는 메소드
      * @param mailDTO 메일 정보를 담은 DTO
      * @return 전송 결과를 나타내는 SmtpStatusCode
      */
     public SmtpStatusCode sendMail(MailDTO mailDTO) throws IOException, InterruptedException {
-        List<String> commands = Command.createCommands(this.senderAddress, this.password, mailDTO);
+        List<String> commands = SmtpCommand.createCommands(this.senderAddress, this.password, mailDTO);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
@@ -52,7 +56,7 @@ public class SendingController {
             // 명령어 전송
             outToServer.writeBytes(commands.get(i));
             outToServer.flush(); // 명령 전송 후 플러시하여 보냄
-            System.out.println("Command: " + commands.get(i));
+            System.out.println("SmtpCommand: " + commands.get(i));
 
             // DATA 명령어인 경우 데이터 전송 상태로 변경
             if (i > 1 && commands.get(i - 1).contains("DATA\r\n")) {
@@ -80,6 +84,7 @@ public class SendingController {
                         return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
                 }
 
+                // 그 이외의 예외 처리
                 if (responseValue.startsWith("5")) {
                     System.out.println("========================================");
                     System.out.println("Error: " + responseValue);
@@ -98,9 +103,13 @@ public class SendingController {
         return SmtpStatusCode.SERVICE_CLOSING;
     }
 
-    // SSL 소켓 생성
+    /*
+        * SSL 소켓을 생성하는 메소드
+        * SSL port = 465
+        * @return 생성된 SSL 소켓
+     */
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        return (SSLSocket) sslSocketFactory.createSocket(this.smtpServer.getSmtpServer(), this.port);
+        return (SSLSocket) sslSocketFactory.createSocket(this.smtpServer.getSmtpServer(), 465);
     }
 }

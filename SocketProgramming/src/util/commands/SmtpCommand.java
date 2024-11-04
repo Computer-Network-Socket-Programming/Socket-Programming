@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 
-public class Command {
+public class SmtpCommand {
 
     // SMTP 인증 명령어 생성
     public static ArrayList<String> createAuthCommands(String senderAddress, String password) throws IOException {
