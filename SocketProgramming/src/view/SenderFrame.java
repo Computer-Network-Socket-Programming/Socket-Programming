@@ -14,6 +14,7 @@ import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 
 public class SenderFrame extends JFrame {
 
@@ -30,7 +31,11 @@ public class SenderFrame extends JFrame {
         this.senderController = new SmtpController(senderAddress, password);
         this.attachedFiles = new ArrayList<>();
 
-        initPanel();
+        initFrame();
+
+        setTitle("Send Mail");
+        setSize(600, 600);
+        setVisible(true);
     }
 
     // 전달 버튼을 눌렀을 때 호출 되는 생성자
@@ -51,6 +56,7 @@ public class SenderFrame extends JFrame {
     // 답장 버튼을 눌렀을 때 호출 되는 생성자
     public SenderFrame(String senderAddress, String password, ReplyMailDTO replyMailDTO) {
         this(senderAddress, password);
+
         if (replyMailDTO.recipient() != null && !replyMailDTO.recipient().isEmpty()) {
             this.receiverField.setText(replyMailDTO.recipient());
             this.receiverField.setEditable(false);
@@ -61,8 +67,8 @@ public class SenderFrame extends JFrame {
         }
     }
 
-    // Class Panel 의 Layout 을 설정하고 form panel 과 button panel 을 추가하는 메소드
-    private void initPanel() {
+    // Frame Class 의 Layout 을 설정하고 form panel 과 button panel 을 추가하는 메소드
+    private void initFrame() {
         setLayout(new BorderLayout());
         add(createFormPanel(), BorderLayout.CENTER);
         add(createCheckButton(), BorderLayout.SOUTH);
@@ -189,7 +195,8 @@ public class SenderFrame extends JFrame {
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
     private void sendEmailOnClick() {
-        MailDTO mailDTO = new MailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
+        String[] recipients = this.receiverField.getText().split(",");
+        MailDTO mailDTO = new MailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
         SmtpStatusCode statusCode;
 
         try {
@@ -210,5 +217,10 @@ public class SenderFrame extends JFrame {
         }
 
         JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
+    }
+
+    public static void main(String[] args) {
+        Map<String, String> env = System.getenv();
+        new SenderFrame(env.get("USER_NAME"), env.get("PASSWORD"));
     }
 }
