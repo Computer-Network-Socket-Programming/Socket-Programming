@@ -64,12 +64,28 @@ public class SendingController {
 
             if (!isData) {
                 responseValue = inFromServer.readLine(); // 서버 응답 확인
+                String statusCode = responseValue.split(" ")[0];
                 System.out.println("Response: " + responseValue);
 
                 // 예외 처리
+                switch (statusCode) {
+                    case "535":
+                        return SmtpStatusCode.NOT_ACCEPTED;
+                    case "553":
+                        return SmtpStatusCode.RECIPIENT_NOT_FOUND;
+                    case "221":
+                        return SmtpStatusCode.SERVICE_CLOSING;
+                    case "421":
+                        return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
+                }
+
                 if (responseValue.startsWith("5")) {
+                    System.out.println("========================================");
+                    System.out.println("Error: " + responseValue);
                     return SmtpStatusCode.SYNTAX_ERROR;
                 } else if (responseValue.startsWith("4")) {
+                    System.out.println("========================================");
+                    System.out.println("Error: " + responseValue);
                     return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
                 }
             }
