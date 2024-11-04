@@ -116,10 +116,11 @@ public class SendingController {
 
         // 첨부 파일 추가
         for (File file : mailDTO.attachedFiles()) {
+            String encodedFileName = "=?utf-8?B?" + encodeText(file.getName().getBytes(StandardCharsets.UTF_8)) + "?=";
             commands.add("--" + boundary + "\r\n");
-            commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + file.getName() + "\"\r\n");
+            commands.add("Content-Type: " + getMimeType(file) + "; name=\"" + encodedFileName + "\"\r\n");
             commands.add("Content-Transfer-Encoding: base64\r\n");
-            commands.add("Content-Disposition: attachment; filename=\"" + file.getName() + "\"\r\n");
+            commands.add("Content-Disposition: attachment; filename=\"" + encodedFileName + "\"\r\n");
             commands.add("\r\n" + encodeFile(file) + "\r\n");
         }
 
