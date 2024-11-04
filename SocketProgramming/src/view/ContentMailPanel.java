@@ -1,6 +1,7 @@
 package view;
 
 import model.DeliverMailDTO;
+import model.MailInfo;
 import model.ReplyMailDTO;
 
 import javax.swing.*;
