@@ -224,8 +224,18 @@ public class MainView {
                 } else {
                     updateMailList(naverMailList, googleMailList, selectedFolder);
                     cardLayout.show(cardPanel, "infoPanel");
+
+                    if ("받은메일함".equals(selectedFolder)) {
+                        contentMailPanel.updateIndex(0);
+                        updateMailList(naverMailList, googleMailList, selectedFolder);
+                        cardLayout.show(cardPanel, "infoPanel");
+                    } else if ("보낸메일함".equals(selectedFolder)) {
+                        contentMailPanel.updateIndex(1);
+                        updateMailList(naverMailList, googleMailList, selectedFolder);
+                        cardLayout.show(cardPanel, "infoPanel");
+                    }
                 }
-                sendIndexToContentPanel(naverMailList,googleMailList,selectedFolder,cardLayout,cardPanel);
+
             }
         });
 
@@ -499,15 +509,5 @@ public class MainView {
         splitPane.setDividerLocation(300);
         return splitPane;
     }
-    private void sendIndexToContentPanel(JList<String[]> naverMailList, JList<String[]> googleMailList,String folderName,CardLayout cardLayout,JPanel cardPanel) {
-        if ("받은메일함".equals(folderName)) {
-            contentMailPanel.updateIndex(0);
-            updateMailList(naverMailList, googleMailList, folderName);
-            cardLayout.show(cardPanel, "infoPanel");
-        } else if ("보낸메일함".equals(folderName)) {
-            contentMailPanel.updateIndex(1);
-            updateMailList(naverMailList, googleMailList, folderName);
-            cardLayout.show(cardPanel, "infoPanel");
-        }
-    }
+
 }
