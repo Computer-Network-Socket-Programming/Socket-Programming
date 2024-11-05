@@ -435,9 +435,9 @@ public class MainView {
                         String[] value = mailList.getModel().getElementAt(index);
 
                         if (browser == NAVER) {
-                            contentMailPanel.updateValue(value, index, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
+                            contentMailPanel.updateValue(value, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
                         } else if (browser == GOOGLE) {
-                            contentMailPanel.updateValue(value, index, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
+                            contentMailPanel.updateValue(value,googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
 
                         }
                         cardLayout.show(cardPanel, "detailPanel");
