@@ -252,10 +252,20 @@ public class SenderFrame extends JFrame {
 
             for (String recipient : recipients) {
                 String r = recipient.trim();
+
+                if (r.startsWith("<")) {
+                    r = r.substring(0, r.length() - 1);
+                }
+
                 sendMailDTOs.add(new SendMailDTO(r, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
             }
         } else {
-            sendMailDTOs.add(new SendMailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
+            String r = this.receiverField.getText().trim();
+
+            if (r.startsWith("<")) {
+                r = r.substring(0, r.length() - 1);
+            }
+            sendMailDTOs.add(new SendMailDTO(r, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
         }
 
         return sendMailDTOs;
