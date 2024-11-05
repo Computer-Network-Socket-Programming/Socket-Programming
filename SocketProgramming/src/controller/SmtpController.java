@@ -27,15 +27,6 @@ public class SmtpController {
         }
     }
 
-    public SmtpStatusCode scheduleEmailSend(SendMailDTO sendMailDTO) throws IOException, InterruptedException {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return sendMail(sendMailDTO);
-    }
-
     public SmtpStatusCode authenticate(String username, String password) throws IOException {
         List<String> commands = SmtpCommand.createAuthCommands(username, password);
         SSLSocket sslSocket = createSSLSocket();

@@ -38,12 +38,12 @@ public class SmtpCommand {
 
         commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");
-        commands.add("RCPT TO:<" + sendMailDTO.recipients() + ">\r\n");
+        commands.add("RCPT TO:<" + sendMailDTO.recipient() + ">\r\n");
         commands.add("DATA\r\n");
 
         // 이메일 헤더 설정
         commands.add("Subject: =?utf-8?B?" + encodeText(sendMailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
-        commands.add("To: " + sendMailDTO.recipients() + "\r\n");
+        commands.add("To: " + sendMailDTO.recipient() + "\r\n");
         commands.add("From: " + senderAddress + "\r\n");
         commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
         commands.add("\r\n");
@@ -52,8 +52,7 @@ public class SmtpCommand {
         commands.add("--" + boundary + "\r\n");
         commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
         commands.add("Content-Transfer-Encoding: base64\r\n");
-        commands.add("\r\n" + encodeText(sendMailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\n");
-        commands.add("보낸 시간: " + sendMailDTO.dateTime().format(DateTimeFormatter.BASIC_ISO_DATE) + "\r\n");
+        commands.add("\r\n" + encodeText(sendMailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
 
         // 첨부 파일 추가
         for (File file : sendMailDTO.attachedFiles()) {
