@@ -40,8 +40,6 @@ public class MainView {
         this.nickname = userId;
         this.naverUserInfoDTO = new NaverUserInfoDTO();
         this.googleUserInfoDTO = new GoogleUserInfoDTO();
-        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
-        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
     }
 
     public void createMainFrame() {

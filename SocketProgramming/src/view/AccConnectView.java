@@ -23,10 +23,10 @@ public class AccConnectView {
     private GoogleUserInfoDTO googleUserInfoDTO;
 
     public boolean isValidate(String userId, String userPassword) {
-        SmtpController stmpCon = new SmtpController(userId, userPassword);
+        SmtpController stmpCon = new SmtpController(userId, "nolb vtfr mqls hnjj");
         SmtpStatusCode checkValidate = null;
         try {
-            checkValidate = stmpCon.authenticate(userId, userPassword);
+            checkValidate = stmpCon.authenticate();
             if (checkValidate.getCode() == 221) return true;
         } catch (IOException ex) {
             throw new RuntimeException(ex);
@@ -130,7 +130,7 @@ public class AccConnectView {
                 // 선택한 포털, 입력한 아이디와 비밀번호 가져오기
                 String selectedPortal = (String) portalComboBox.getSelectedItem();
                 String userId = idField.getText();
-                String userPassword = new String(passwordField.getPassword());
+                String userPassword = passwordField.getText();
 
                 // 정보 확인용 알림창
                 JLabel messageLabel = new JLabel(
