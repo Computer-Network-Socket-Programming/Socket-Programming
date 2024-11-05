@@ -33,7 +33,7 @@ public class SenderFrame extends JFrame {
         initFrame();
 
         setTitle("Send Mail");
-        setSize(600, 600);
+        setSize(400, 400);
         setVisible(true);
     }
 

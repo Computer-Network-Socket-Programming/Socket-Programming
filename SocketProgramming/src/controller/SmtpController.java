@@ -27,15 +27,17 @@ public class SmtpController {
         }
     }
 
-    public SmtpStatusCode authenticate(String username, String password) throws IOException {
-        List<String> commands = SmtpCommand.createAuthCommands(username, password, this.mailPlatform);
+    public SmtpStatusCode authenticate() throws IOException {
+        List<String> commands = SmtpCommand.createAuthCommands(this.senderAddress, this.password, this.mailPlatform);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
         String responseValue = inFromServer.readLine(); // 서버 응답 확인
 
+        System.out.println("username: " + this.senderAddress);
+        System.out.println("password: " + password);
+
         System.out.println("Response: " + responseValue);
-        System.out.println(username + password + "\n");
 
         for (String command : commands) {
             // 명령어 전송
