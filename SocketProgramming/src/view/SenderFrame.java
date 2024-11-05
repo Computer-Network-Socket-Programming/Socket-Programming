@@ -193,27 +193,43 @@ public class SenderFrame extends JFrame {
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
     private void sendEmailOnClick() {
-        String[] recipients = this.receiverField.getText().split(",");
-        SendMailDTO sendMailDTO = new SendMailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
+        ArrayList<SendMailDTO> sendMailDTOs = createSendMailDTOs();
         SmtpStatusCode statusCode;
 
-        try {
-            statusCode = senderController.sendMail(sendMailDTO);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
-            return;
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "발신자 또는 파일 인증에 실패했습니다.");
-            return;
-        }
+        for(SendMailDTO sendMailDTO : sendMailDTOs) {
+            try {
+                statusCode = senderController.sendMail(sendMailDTO);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
+                return;
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "발신자 또는 파일 인증에 실패했습니다.");
+                return;
+            }
 
-        if (statusCode != SmtpStatusCode.SERVICE_CLOSING) {
-            JOptionPane.showMessageDialog(this, statusCode.getDescription());
-            return;
+            if (statusCode != SmtpStatusCode.SERVICE_CLOSING) {
+                JOptionPane.showMessageDialog(this, statusCode.getDescription());
+                return;
+            }
         }
 
         JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
+    }
+
+    private ArrayList<SendMailDTO> createSendMailDTOs() {
+        ArrayList<SendMailDTO> sendMailDTOs = new ArrayList<>();
+        if (this.receiverField.getText().contains(",")) {
+            String[] recipients = this.receiverField.getText().split(",");
+
+            for(String recipient : recipients) {
+                sendMailDTOs.add(new SendMailDTO(recipient, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now()));
+            }
+        } else {
+            sendMailDTOs.add(new SendMailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now()));
+        }
+
+        return sendMailDTOs;
     }
 }
