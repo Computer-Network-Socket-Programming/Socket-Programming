@@ -31,7 +31,6 @@ public class MainView {
     private NaverUserInfoDTO naverUserInfoDTO;
     private GoogleUserInfoDTO googleUserInfoDTO;
     private ContentMailPanel contentMailPanel;
-    private NaverConnector naverConnector;
     private int NAVER = 1;
     private int GOOGLE = 2;
     private int BOTH = 3;
@@ -78,10 +77,15 @@ public class MainView {
 
     private void createRefreshButtonEvent(JButton button){
         button.addActionListener(e->{
-            if (naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) {
+            if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() == null && googleUserInfoDTO.getPassword() == null)) {
                 loadEmailsInBackground(NAVER);
-            } else {
-                JOptionPane.showMessageDialog(null, "네이버 계정을 연동해주세요.");
+            } else if((naverUserInfoDTO.getUsername() == null && naverUserInfoDTO.getPassword() == null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)){
+                loadEmailsInBackground(GOOGLE);
+            } else if((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)){
+                loadEmailsInBackground(NAVER);
+                loadEmailsInBackground(GOOGLE);
+            }else {
+                JOptionPane.showMessageDialog(null, "메일 계정을 1개 이상 연동해주세요.");
             }
         });
     }
@@ -326,6 +330,7 @@ public class MainView {
                 break;
             case "g보낸메일함":
                 updateSentBoxGoogle(googleMails);
+                System.out.println(EmailDataRepository.getInstance().getGoogleSentMailData());
                 activeScrollPane = new JScrollPane(googleMailList);
                 break;
             case "g임시보관함":
