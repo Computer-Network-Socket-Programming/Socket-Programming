@@ -1,22 +1,22 @@
 package util.commands;
 
 import model.SendMailDTO;
+import util.enums.MailPlatform;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
 public class SmtpCommand {
 
     // SMTP 인증 명령어 생성
-    public static ArrayList<String> createAuthCommands(String senderAddress, String password) throws IOException {
+    public static ArrayList<String> createAuthCommands(String senderAddress, String password, MailPlatform mailPlatform) throws IOException {
         ArrayList<String> commands = new ArrayList<>();
 
-        commands.add("HELO " + senderAddress + "\r\n");
+        commands.add("HELO " + mailPlatform.getSmtpServer() + "\r\n");
         commands.add("AUTH LOGIN" + "\r\n");
         commands.add(encodeText(senderAddress.getBytes()) + "\r\n");
         commands.add(encodeText(password.getBytes()) + "\r\n");
@@ -32,9 +32,9 @@ public class SmtpCommand {
      * @return SMTP 명령어 목록
      * createAuthCommands 메소드를 통해 SMTP 인증 명령어 생성
      */
-    public static ArrayList<String> createCommands(String senderAddress, String password, SendMailDTO sendMailDTO) throws IOException {
+    public static ArrayList<String> createCommands(String senderAddress, String password, SendMailDTO sendMailDTO, MailPlatform mailPlatform) throws IOException {
         String boundary = "----=_NextPart_" + System.currentTimeMillis();
-        ArrayList<String> commands = new ArrayList<>(createAuthCommands(senderAddress, password));
+        ArrayList<String> commands = new ArrayList<>(createAuthCommands(senderAddress, password, mailPlatform));
 
         commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");

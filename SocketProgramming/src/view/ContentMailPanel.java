@@ -87,58 +87,50 @@ public class ContentMailPanel extends JPanel {
             }
         });
 
-        switch (categoryIndex) {
-            case 0: // 받은메일함일 때
+        replyMailButton = new JButton("답장");
+        mailDeliverButton = new JButton("전달");
 
-                replyMailButton = new JButton("답장");
-                buttonPanel.add(replyMailButton);
-                replyMailButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (e.getSource() == replyMailButton) {
-                            ReplyMailDTO replyMailDTO = new ReplyMailDTO(
-                                    mailInfoDTO.receiver(),
-                                    "-----Original Message-----\n\n" + mailInfoDTO.content() + "\n\n"
-                            );
-                            new SenderFrame(username, password, replyMailDTO);
-                        }
+        buttonPanel.add(mailDeliverButton);
+        buttonPanel.add(replyMailButton);
+
+
+        replyMailButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == replyMailButton) {
+                    ReplyMailDTO replyMailDTO = new ReplyMailDTO(
+                            mailInfoDTO.receiver(),
+                            "-----Original Message-----\n\n" + mailInfoDTO.content() + "\n\n"
+                    );
+                    new SenderFrame(username, password, replyMailDTO);
+                }
+            }
+        });
+
+        mailDeliverButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (e.getSource() == mailDeliverButton) {
+                    if (mailInfoDTO.subject() == null || mailInfoDTO.subject().isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "제목이 유효하지 않습니다.");
+                        return;
                     }
-                });
-
-
-            case 1: // 보낸메일함일 때 전달 버튼만 표시
-                mailDeliverButton = new JButton("전달");
-                buttonPanel.add(mailDeliverButton);
-                mailDeliverButton.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        if (e.getSource() == mailDeliverButton) {
-                            if (mailInfoDTO.subject() == null || mailInfoDTO.subject().isEmpty()) {
-                                JOptionPane.showMessageDialog(null, "제목이 유효하지 않습니다.");
-                                return;
-                            }
-                            if (mailInfoDTO.content() == null || mailInfoDTO.content().isEmpty()) {
-                                JOptionPane.showMessageDialog(null, "내용이 존재하지 않습니다.");
-                                return;
-                            }
-                            DeliverMailDTO deliverMailDTO = new DeliverMailDTO(
-                                    mailInfoDTO.subject(),
-                                    mailInfoDTO.content()
-                            );
-                            new SenderFrame(username, password, deliverMailDTO);
-                        }
+                    if (mailInfoDTO.content() == null || mailInfoDTO.content().isEmpty()) {
+                        JOptionPane.showMessageDialog(null, "내용이 존재하지 않습니다.");
+                        return;
                     }
-                });
-                break;
-
-            default:
-                break;
-        }
+                    DeliverMailDTO deliverMailDTO = new DeliverMailDTO(
+                            mailInfoDTO.subject(),
+                            mailInfoDTO.content()
+                    );
+                    new SenderFrame(username, password, deliverMailDTO);
+                }
+            }
+        });
     }
 
-    public void updateValue(String[] value, int index, String username, String password) {
+    public void updateValue(String[] value, String username, String password) {
         this.mailInfoDTO = new MailInfoDTO(value[0], value[1], value[2], value[3], value[4]);
-        this.categoryIndex = index;
         this.password = password;
         this.username = username;
 
@@ -147,6 +139,29 @@ public class ContentMailPanel extends JPanel {
         subject.setText(mailInfoDTO.subject());
         mailDate.setText(mailInfoDTO.date());
         content.setText(mailInfoDTO.content());
+
+
+    }
+    public void updateIndex(int index){
+        this.categoryIndex = index;
+        updateButtonVisibility();
     }
 
+    private void updateButtonVisibility() {
+
+        switch (categoryIndex) {
+            case 0: // 받은메일함
+                replyMailButton.setVisible(true);
+                mailDeliverButton.setVisible(true);
+                break;
+            case 1: // 보낸메일함
+                replyMailButton.setVisible(false);
+                mailDeliverButton.setVisible(true);
+                break;
+            default:
+                replyMailButton.setVisible(false);
+                mailDeliverButton.setVisible(false);
+                break;
+        }
+    }
 }

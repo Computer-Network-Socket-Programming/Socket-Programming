@@ -12,7 +12,6 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -145,6 +144,10 @@ public class SenderFrame extends JFrame {
         JButton fileDeleteButton = new JButton("파일 삭제");
         JTextArea filePathArea = new JTextArea();
         JScrollPane scrollPane = new JScrollPane(filePathArea);
+
+        filePathArea.setEditable(false);
+        filePathArea.setLineWrap(true);
+        filePathArea.setBackground(Color.LIGHT_GRAY);
 
         fileSelectionButton.addActionListener(e -> selectFile(filePathArea));
         fileDeleteButton.addActionListener(e -> deleteFile(filePathArea));
