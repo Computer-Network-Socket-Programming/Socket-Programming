@@ -22,7 +22,7 @@ public class SmtpController {
         // 이메일 주소의 도메인에 따라 SMTP 서버를 결정
         switch (senderAddress.split("@")[1]) {
             case "naver.com" -> this.mailPlatform = MailPlatform.NAVER;
-            case "google.com" -> this.mailPlatform = MailPlatform.GMAIL;
+            case "gmail.com" -> this.mailPlatform = MailPlatform.GMAIL;
             default -> this.mailPlatform = null;
         }
     }
@@ -35,6 +35,7 @@ public class SmtpController {
         String responseValue = inFromServer.readLine(); // 서버 응답 확인
 
         System.out.println("Response: " + responseValue);
+        System.out.println(username + password + "\n");
 
         for (String command : commands) {
             // 명령어 전송

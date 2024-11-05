@@ -35,6 +35,16 @@ public class AccConnectView {
         return false;
     }
 
+    public boolean isRightEmail(String userId){
+        // 골뱅이 여러개인 경우 tryagain()
+        int atCnt = 0;
+        for (char c : userId.toCharArray()) {
+            if (c == '@') atCnt++;
+        }
+        return atCnt < 2;
+    }
+
+
     public void showTryAgainBtn() {
         JOptionPane.showMessageDialog(null,
                 "존재하지 않는 계정입니다!", // 중앙 정렬된 JLabel
@@ -46,7 +56,7 @@ public class AccConnectView {
     public void showAlreadyConnectedBtn() {
         JOptionPane.showMessageDialog(null,
                 "이미 연동된 계정입니다!", // 중앙 정렬된 JLabel
-                "ALREADY CONNECTED ACCOUNT!", // 대화 상자 제목
+                "ALREADY CONNECTED!", // 대화 상자 제목
                 JOptionPane.PLAIN_MESSAGE // 아이콘 없음
         );
     }
@@ -61,13 +71,13 @@ public class AccConnectView {
         return result == JOptionPane.OK_OPTION;
     }
 
-    public boolean isNotNull(String selectedPortal, String userId, String userPassword) {
+    public boolean isNotNull(String selectedPortal) {
 
         switch (selectedPortal) {
             case "Naver":
                 if (this.naverUserInfoDTO.getUsername() != null) return true;
                 break;
-            case "Gmail":
+            case "Google":
                 if (this.googleUserInfoDTO.getUsername() != null) return true;
                 break;
         }
@@ -89,7 +99,7 @@ public class AccConnectView {
         accFrame.setLayout(null);
 
         JLabel ml = new JLabel("연동할 계정의 아이디와 비밀번호를 입력해주세요\n");
-        String[] portals = {"Naver", "Gmail"};
+        String[] portals = {"Naver", "Google"};
         portalComboBox = new JComboBox<>(portals);
         JLabel idLabel = new JLabel("ID :");
         JTextField idField = new JTextField();
@@ -142,27 +152,20 @@ public class AccConnectView {
                 // 확인 버튼이 눌렸을 때 수행할 동작 (연동시도)
                 if (result == JOptionPane.OK_OPTION) {
 
-                    // 골뱅이 여러개인 경우 tryagain()
-                    int atCnt = 0;
-                    for (char c : userId.toCharArray()) {
-                        if (c == '@') atCnt++;
-                    }
-                    if (atCnt >= 2) {
-                        showTryAgainBtn();
-                        return;
-                    }
-
-
                     switch (Objects.requireNonNull(selectedPortal)) {
                         case "Naver":
                             userId = (userId.contains("@naver.com")) ? userId : userId + "@naver.com";
-                            boolean notNull = isNotNull(selectedPortal, userId, userPassword);
+                            if (!isRightEmail(userId)){
+                                showTryAgainBtn();
+                                break;
+                            }
+                            boolean notNull = isNotNull(selectedPortal);
 
                             // 덮어쓰기 시도
                             if (notNull) {
                                 if (askChangeAcc()) {
                                     // 이미 연동된 계정인 경우
-                                    if (userId.equals(naverUserInfoDTO.getUsername()) && userPassword.equals(naverUserInfoDTO.getUsername())) {
+                                    if (userId.equals(naverUserInfoDTO.getUsername()) && userPassword.equals(naverUserInfoDTO.getPassword())) {
                                         showAlreadyConnectedBtn();
                                     }
                                     // 새 계정을 덮어쓰는 경우
@@ -194,18 +197,26 @@ public class AccConnectView {
 
                         case "Google":
                             userId = (userId.contains("@gmail.com")) ? userId : userId + "@gmail.com";
-                            notNull = isNotNull(selectedPortal, userId, userPassword);
+                            if (!isRightEmail(userId)){
+                                showTryAgainBtn();
+                                break;
+                            }
+                            notNull = isNotNull(selectedPortal);
 
                             // 덮어쓰기 시도
                             if (notNull) {
                                 if (askChangeAcc()) {
                                     // 이미 연동된 계정인 경우
-                                    if (userId.equals(googleUserInfoDTO.getUsername()) && userPassword.equals(googleUserInfoDTO.getUsername())) {
+                                    if (userId.equals(googleUserInfoDTO.getUsername()) && userPassword.equals(googleUserInfoDTO.getPassword())) {
                                         showAlreadyConnectedBtn();
                                     }
                                     // 새 계정을 덮어쓰는 경우
                                     else {
                                         if (isValidate(userId, userPassword)) {
+                                            System.out.println(googleUserInfoDTO.getUsername());
+                                            System.out.println(googleUserInfoDTO.getPassword());
+                                            System.out.println(userId);
+                                            System.out.println(userPassword);
                                             googleUserInfoDTO.setUsername(userId);
                                             googleUserInfoDTO.setPassword(userPassword);
 
@@ -253,7 +264,7 @@ public class AccConnectView {
 
     private void showSuccessMessage() {
         JOptionPane.showMessageDialog(null,
-                "연동 성공! \n 새로고침을 눌러주떼욤!", // 중앙 정렬된 JLabel
+                "연동 성공! 새로고침을 눌러주떼욤!", // 중앙 정렬된 JLabel
                 "양쿤 러버", // 대화 상자 제목
                 JOptionPane.PLAIN_MESSAGE // 아이콘 없음
         );
