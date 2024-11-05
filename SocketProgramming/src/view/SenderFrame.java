@@ -8,13 +8,13 @@ import util.enums.SmtpStatusCode;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Map;
 
 public class SenderFrame extends JFrame {
 
@@ -97,13 +97,17 @@ public class SenderFrame extends JFrame {
      * button panel 은 보내기 버튼과 취소 버튼으로 구성되어 있음
      */
     private JPanel createCheckButton() {
-        JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+        JPanel buttonPanel = new JPanel(new GridLayout(1, 3));
         JButton senderButton = new JButton("보내기");
+        JButton reservationSenderButton = new JButton("10초 후 보내기");
         JButton cancelButton = new JButton("취소");
 
-        senderButton.addActionListener(e -> sendEmailOnClick());
+        senderButton.addActionListener(e -> sendButtonOnClick(e));
+        reservationSenderButton.addActionListener(e -> sendButtonOnClick(e));
         cancelButton.addActionListener(e -> this.setVisible(false));
+
         buttonPanel.add(senderButton);
+        buttonPanel.add(reservationSenderButton);
         buttonPanel.add(cancelButton);
         return buttonPanel;
     }
@@ -186,34 +190,74 @@ public class SenderFrame extends JFrame {
         filePathArea.setText("");
     }
 
+    private void sendButtonOnClick(ActionEvent e) {
+        ArrayList<SendMailDTO> sendMailDTOs = createSendMailDTOs();
+
+        if (e.getActionCommand().equals("10초 후 보내기")) {
+            JOptionPane.showMessageDialog(this, "10초 후에 메일이 전송됩니다.");
+
+            new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    // 10초 대기
+                    Thread.sleep(10000);
+                    sendEmails(sendMailDTOs);
+                    return null;
+                }
+            }.execute();
+        } else {
+            sendEmails(sendMailDTOs);
+        }
+    }
+
     /*
      * 보내기 버튼을 클릭했을 때 호출되는 메소드
      * receiverField, subjectField, messageArea 에 입력된 값을 가져와서
      * controller 의 sendMail method 를 호출하여 메일을 전송함
      * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
      */
-    private void sendEmailOnClick() {
-        String[] recipients = this.receiverField.getText().split(",");
-        SendMailDTO sendMailDTO = new SendMailDTO(Arrays.stream(recipients).toList(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles, LocalDateTime.now());
-        SmtpStatusCode statusCode;
+    private void sendEmails(ArrayList<SendMailDTO> sendMailDTOs) {
+        SmtpStatusCode statusCode = null;
 
         try {
-            statusCode = senderController.sendMail(sendMailDTO);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
+            for (SendMailDTO sendMailDTO : sendMailDTOs) {
+                statusCode = senderController.sendMail(sendMailDTO);
+            }
+        } catch (UnknownHostException exception) {
+            exception.printStackTrace();
             JOptionPane.showMessageDialog(this, "서버 연결에 실패했습니다.");
             return;
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        } catch (IOException | InterruptedException exception) {
+            exception.printStackTrace();
             JOptionPane.showMessageDialog(this, "발신자 또는 파일 인증에 실패했습니다.");
             return;
         }
 
         if (statusCode != SmtpStatusCode.SERVICE_CLOSING) {
-            JOptionPane.showMessageDialog(this, statusCode.getDescription());
-            return;
+            if (statusCode == null) {
+                JOptionPane.showMessageDialog(this, "메일 전송에 실패했습니다.");
+            } else {
+                JOptionPane.showMessageDialog(this, statusCode.getDescription());
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
+        }
+    }
+
+    private ArrayList<SendMailDTO> createSendMailDTOs() {
+        ArrayList<SendMailDTO> sendMailDTOs = new ArrayList<>();
+
+        if (this.receiverField.getText().contains(",")) {
+            String[] recipients = this.receiverField.getText().split(",");
+
+            for (String recipient : recipients) {
+                String r = recipient.trim();
+                sendMailDTOs.add(new SendMailDTO(r, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
+            }
+        } else {
+            sendMailDTOs.add(new SendMailDTO(this.receiverField.getText(), this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
         }
 
-        JOptionPane.showMessageDialog(this, "메일이 전송되었습니다!");
+        return sendMailDTOs;
     }
 }

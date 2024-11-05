@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
@@ -37,12 +38,12 @@ public class SmtpCommand {
 
         commands.remove(commands.size() - 1); // QUIT 명령어 제거
         commands.add("MAIL FROM:<" + senderAddress + ">\r\n");
-        commands.add("RCPT TO:<" + sendMailDTO.recipients() + ">\r\n");
+        commands.add("RCPT TO:<" + sendMailDTO.recipient() + ">\r\n");
         commands.add("DATA\r\n");
 
         // 이메일 헤더 설정
         commands.add("Subject: =?utf-8?B?" + encodeText(sendMailDTO.subject().getBytes(StandardCharsets.UTF_8)) + "?=\r\n");
-        commands.add("To: " + sendMailDTO.recipients() + "\r\n");
+        commands.add("To: " + sendMailDTO.recipient() + "\r\n");
         commands.add("From: " + senderAddress + "\r\n");
         commands.add("Content-Type: multipart/mixed; boundary=\"" + boundary + "\"\r\n");
         commands.add("\r\n");
