@@ -70,7 +70,7 @@ public class GmailConnector {
         readResponse();  // `SELECT` 응답
 
         List<String[]> mails = new ArrayList<>();
-        sendCommand("a004 FETCH " + range + " (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])");
+        sendCommand("a004 FETCH 3:5 (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])");
 
         String line;
         String from = "", to = "", subject = "", date = "", body = "";
@@ -123,10 +123,10 @@ public class GmailConnector {
     public void fetchAllMailFolders() throws Exception {
         EmailDataRepository repository = EmailDataRepository.getInstance();
 
-        repository.setGoogleInBoxMailData(fetchMailData("INBOX"));                         // Inbox
-        repository.setGoogleSentMailData(fetchMailData("[Gmail]/&vPSwuNO4ycDVaA-"));      // Sent Mail
+        repository.setGoogleTrashMailData(fetchMailData("INBOX"));                         // Inbox
+        repository.setGoogleInBoxMailData(fetchMailData("[Gmail]/&vPSwuNO4ycDVaA-"));      // Sent Mail
         repository.setGoogleDraftMailData(fetchMailData("[Gmail]/&x4TC3Lz0rQDVaA-"));     // Drafts
-        repository.setGoogleTrashMailData(fetchMailData("[Gmail]/&1zTJwNG1-"));        // Trash
+        repository.setGoogleSentMailData(fetchMailData("[Gmail]/&1zTJwNG1-"));        // Trash
     }
 
     private void sendCommand(String command) throws Exception {

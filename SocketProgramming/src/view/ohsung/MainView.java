@@ -358,6 +358,7 @@ public class MainView {
                 break;
             case "g보낸메일함":
                 updateSentBoxGoogle(googleMails);
+                System.out.println(EmailDataRepository.getInstance().getGoogleSentMailData());
                 activeScrollPane = new JScrollPane(googleMailList);
                 break;
             case "g임시보관함":

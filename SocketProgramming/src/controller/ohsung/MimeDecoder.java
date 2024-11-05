@@ -81,8 +81,7 @@ public class MimeDecoder {
                         // charset 찾기
                         Pattern charsetPattern = Pattern.compile("charset=\"?([^\"\\s;]+)\"?");
                         Matcher charsetMatcher = charsetPattern.matcher(part);
-                        String charset = charsetMatcher.find() ?
-                                charsetMatcher.group(1) : "UTF-8";
+                        String charset = charsetMatcher.find() ? charsetMatcher.group(1) : "UTF-8";
 
                         // Content-Transfer-Encoding 확인
                         if (part.contains("Content-Transfer-Encoding: base64")) {
@@ -92,7 +91,14 @@ public class MimeDecoder {
                                 String base64Content = headerAndBody[1].replaceAll("\\s+", "");
                                 try {
                                     byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
-                                    return new String(decodedBytes, charset);
+                                    String decodedText = new String(decodedBytes, charset);
+
+                                    // HTML 태그가 포함되어 있는지 확인
+                                    if (containsHtml(decodedText)) {
+                                        return "SWING에서 구현하기 복잡한 HTML태그입니다.";
+                                    }
+
+                                    return decodedText;
                                 } catch (IllegalArgumentException e) {
                                     return "Base64 디코딩 실패: " + e.getMessage();
                                 }
@@ -101,7 +107,14 @@ public class MimeDecoder {
                             // Base64가 아닌 경우, 헤더 이후의 내용 반환
                             String[] headerAndBody = part.split("\r?\n\r?\n", 2);
                             if (headerAndBody.length > 1) {
-                                return headerAndBody[1].trim();
+                                String decodedText = headerAndBody[1].trim();
+
+                                // HTML 태그가 포함되어 있는지 확인
+                                if (containsHtml(decodedText)) {
+                                    return "SWING에서 구현하기 복잡한 HTML태그입니다.";
+                                }
+
+                                return decodedText;
                             }
                         }
                     }
@@ -111,8 +124,7 @@ public class MimeDecoder {
             // multipart가 아닌 경우 기존 방식으로 처리
             Pattern charsetPattern = Pattern.compile("charset=([^\\s;]+)");
             Matcher charsetMatcher = charsetPattern.matcher(body);
-            String charset = charsetMatcher.find() ?
-                    charsetMatcher.group(1).replace("\"", "") : "UTF-8";
+            String charset = charsetMatcher.find() ? charsetMatcher.group(1).replace("\"", "") : "UTF-8";
 
             if (body.contains("Content-Transfer-Encoding: base64")) {
                 Pattern base64Pattern = Pattern.compile(
@@ -125,11 +137,23 @@ public class MimeDecoder {
                     String base64Content = base64Matcher.group(1).replaceAll("\\s+", "");
                     try {
                         byte[] decodedBytes = Base64.getDecoder().decode(base64Content);
-                        return new String(decodedBytes, charset);
+                        String decodedText = new String(decodedBytes, charset);
+
+                        // HTML 태그가 포함되어 있는지 확인
+                        if (containsHtml(decodedText)) {
+                            return body + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + "SWING에서 구현하기 복잡한 HTML태그입니다.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+                        }
+
+                        return decodedText;
                     } catch (IllegalArgumentException e) {
                         return "Base64 디코딩 실패: " + e.getMessage();
                     }
                 }
+            }
+
+            // HTML 태그가 포함되어 있는지 확인
+            if (containsHtml(body)) {
+                return body + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" + "SWING에서 구현하기 복잡한 HTML태그입니다.\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" ;
             }
 
             return body;
@@ -138,4 +162,11 @@ public class MimeDecoder {
             return "메일 내용을 디코딩하는 중 오류가 발생했습니다: " + e.getMessage();
         }
     }
+
+    // HTML 태그 포함 여부를 확인하는 헬퍼 메서드
+    private boolean containsHtml(String text) {
+        Pattern htmlPattern = Pattern.compile(".*\\<[^>]+>.*", Pattern.DOTALL);
+        return htmlPattern.matcher(text).matches();
+    }
+
 }
