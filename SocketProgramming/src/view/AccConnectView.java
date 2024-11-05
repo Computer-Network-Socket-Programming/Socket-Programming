@@ -32,6 +32,14 @@ public class AccConnectView {
         return false;
     }
 
+    public void showTryAgainBtn(){
+        JOptionPane.showMessageDialog(null,
+                "존재하지 않는 계정입니다!", // 중앙 정렬된 JLabel
+                "UNAVAILABLE ACCOUNT", // 대화 상자 제목
+                JOptionPane.PLAIN_MESSAGE // 아이콘 없음
+        );
+    }
+
     public AccConnectView(String nickname){
         this.nickname = nickname;
     }
@@ -111,6 +119,7 @@ public class AccConnectView {
                                 MainView mainView = new MainView(nickname);
                                 mainView.createMainFrame();
                             }
+                            else showTryAgainBtn();
 
                             break;
 
@@ -126,10 +135,12 @@ public class AccConnectView {
                                 MainView mainView = new MainView(nickname);
                                 mainView.createMainFrame();
                             }
+                            else showTryAgainBtn();
+
                             break;
 
                         default :
-                            // 아이디와 비밀번호를 다시 입력해주세요 ! 알림 뜨게 하기
+                            showTryAgainBtn();
                             break;
 
                     }

@@ -151,6 +151,9 @@ public class MainView {
     private void showVerifyEmailPopup(){
         AccConnectView accConnectView = new AccConnectView(nickname);
         accConnectView.createAccConnectView();
+//        naverUserInfoDTO.setUsername("99doldol@naver.com");
+//        naverUserInfoDTO.setPassword("@rnjsdhtjd99");
+
 
     }
 
