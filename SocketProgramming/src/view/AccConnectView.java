@@ -35,9 +35,43 @@ public class AccConnectView {
     public void showTryAgainBtn(){
         JOptionPane.showMessageDialog(null,
                 "존재하지 않는 계정입니다!", // 중앙 정렬된 JLabel
-                "UNAVAILABLE ACCOUNT", // 대화 상자 제목
+                "UNAVAILABLE ACCOUNT!", // 대화 상자 제목
                 JOptionPane.PLAIN_MESSAGE // 아이콘 없음
         );
+    }
+    public void showAlreadyConnectedBtn(){
+        JOptionPane.showMessageDialog(null,
+                "이미 연동된 계정입니다!", // 중앙 정렬된 JLabel
+                "ALREADY CONNECTED ACCOUNT!", // 대화 상자 제목
+                JOptionPane.PLAIN_MESSAGE // 아이콘 없음
+        );
+    }
+
+    public boolean askChangeAcc(){
+        int result = JOptionPane.showConfirmDialog(null,
+                "이미 계정이 연동되어 있습니다. \n 계정을 변경하시겠습니까?", // 중앙 정렬된 JLabel
+                "CHANGE ACCOUNT?", // 대화 상자 제목
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE // 아이콘 없음
+        );
+        return result == JOptionPane.OK_OPTION;
+    }
+
+    public boolean isNotNull(String selectedPortal, String userId, String userPassword){
+
+        switch(selectedPortal){
+            case "Naver" :
+                NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
+                if ( naverUserInfoDTO.getUsername() != null ) return true;
+                break;
+            case "Gmail" :
+                GoogleUserInfoDTO googleUserInfoDTO = GoogleUserInfoDTO.getInstance();
+                if ( googleUserInfoDTO.getUsername() != null ) return true;
+                break;
+        }
+
+        return false;
+
     }
 
     public AccConnectView(String nickname){
@@ -45,10 +79,8 @@ public class AccConnectView {
     }
     public void createAccConnectView(){
         JFrame accFrame = new JFrame("반갑습니다!" + nickname + "님!!");
-//        accFrame.setBackground(Color.getHSBColor(0.316f, 0.26f, 0.94f));
         accFrame.setSize(500,400);
         accFrame.setLocationRelativeTo(null); // 화면 중앙에 위치하게 설정
-//        accFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         accFrame.setLayout(null);
 
         JLabel ml = new JLabel("연동할 계정의 아이디와 비밀번호를 입력해주세요\n");
@@ -102,30 +134,68 @@ public class AccConnectView {
                         JOptionPane.PLAIN_MESSAGE // 아이콘 없음
                 );
 
-                // 확인 버튼이 눌렸을 때 수행할 동작
+                // 확인 버튼이 눌렸을 때 수행할 동작 (연동시도)
                 if (result == JOptionPane.OK_OPTION) {
 
-                    // userId 정보 처리
+                    // 골뱅이 여러개인 경우 tryagain()
+                    int atCnt = 0;
+                    for (char c : userId.toCharArray()) {
+                        if (c == '@') atCnt++;
+                    }
+                    if (atCnt >= 2){
+                        showTryAgainBtn();
+                        return;
+                    }
+
+
                     switch(Objects.requireNonNull(selectedPortal)){
                         case "Naver" :
                             userId = ( userId.contains("@naver.com") ) ? userId : userId + "@naver.com";
+                            boolean notNull = isNotNull(selectedPortal, userId, userPassword);
 
-                            if ( isValidate(userId, userPassword) ){
-                                NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
-                                naverUserInfoDTO.setUsername(userId);
-                                naverUserInfoDTO.setPassword(userPassword);
+                            // 덮어쓰기 시도
+                            if ( notNull ){
+                                if ( askChangeAcc() ){
+                                    NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
+                                    // 이미 연동된 계정인 경우
+                                    if ( userId.equals(naverUserInfoDTO.getUsername()) && userPassword.equals(naverUserInfoDTO.getPassword()) ) {
+                                        showAlreadyConnectedBtn();
+                                    }
+                                    // 새 계정을 덮어쓰는 경우
+                                    else{
+                                        if ( isValidate(userId, userPassword) ){
+                                            naverUserInfoDTO.setUsername(userId);
+                                            naverUserInfoDTO.setPassword(userPassword);
 
-                                accFrame.dispose();
-                                MainView mainView = new MainView(nickname);
-                                mainView.createMainFrame();
+                                            accFrame.dispose();
+                                            MainView mainView = new MainView(nickname);
+                                            mainView.createMainFrame();
+                                        }
+                                        else showTryAgainBtn();
+                                    }
+                                }
+
                             }
-                            else showTryAgainBtn();
+
+                            // 아예 새 연동
+                            else{
+                                if ( isValidate(userId, userPassword) ){
+                                    NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
+                                    naverUserInfoDTO.setUsername(userId);
+                                    naverUserInfoDTO.setPassword(userPassword);
+
+                                    accFrame.dispose();
+                                    MainView mainView = new MainView(nickname);
+                                    mainView.createMainFrame();
+                                }
+                                else showTryAgainBtn();
+                            }
 
                             break;
 
                         case "Google" :
-                            userId = ( userId.contains("@google.com") ) ? userId : userId + "@google.com";
-
+                            userId = ( userId.contains("@gmail.com") ) ? userId : userId + "@gmail.com";
+                            isNotNull(selectedPortal, userId, userPassword);
                             if ( isValidate(userId, userPassword) ){
                                 GoogleUserInfoDTO googleInfo = GoogleUserInfoDTO.getInstance();
                                 googleInfo.setUsername(userId);
@@ -144,11 +214,8 @@ public class AccConnectView {
                             break;
 
                     }
-                } else {
-                    System.out.println("로그인 취소됨.");
                 }
-
-
+                else System.out.println("로그인 취소됨.");
             }
         });
 
