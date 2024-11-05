@@ -20,8 +20,6 @@ public class NaverConnector {
     private BufferedReader reader; //서버 응답을 읽어오는 스트림
     private PrintWriter writer; // 서버로 명령어를 보내는 스트림
 
-    private String mailStatus;
-
     public NaverConnector(String username, String password) throws Exception{
         connect(username, password);
     }
@@ -113,6 +111,7 @@ public class NaverConnector {
                 from = line.substring(line.indexOf("From:") + 5).trim();
                 from = MimeDecoder.getInstance().decodeMimeText(from);
                 System.out.println("보낸 사람 파싱: " + from);
+
             } else if (isReadingMail && line.toUpperCase().startsWith("TO:")) {
                 to = line.substring(line.indexOf("To:") + 5).trim();
                 to = MimeDecoder.getInstance().decodeMimeText(to);
@@ -139,6 +138,7 @@ public class NaverConnector {
                     isReadingBody = false;
 
                     // 메일 데이터 저장
+
                     mails.add(new String[]{from, to, subject, date, body});
                     from = to = subject = date = body = mailId = "";
                     isReadingMail = false;
@@ -151,7 +151,6 @@ public class NaverConnector {
                 break;
             }
         }
-
         return mails;
     }
 
@@ -197,6 +196,7 @@ public class NaverConnector {
 
     public void disconnect() throws Exception {
         // LOGOUT 명령어를 보내 로그아웃 요청
+
         sendCommand("a005 LOGOUT");
 
         // 로그아웃 응답 확인

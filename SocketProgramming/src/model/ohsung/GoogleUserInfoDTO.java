@@ -1,6 +1,7 @@
 package model.ohsung;
 
 public class GoogleUserInfoDTO {
+
     private String username;
     private String password;
 
@@ -16,4 +17,5 @@ public class GoogleUserInfoDTO {
     public void setPassword(String password){
         this.password = password;
     }
+
 }

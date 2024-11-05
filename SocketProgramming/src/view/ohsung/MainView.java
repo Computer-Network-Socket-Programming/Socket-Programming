@@ -1,5 +1,7 @@
 package view.ohsung;
 
+
+import view.AccConnectView;
 import controller.ohsung.GmailConnector;
 import controller.ohsung.NaverConnector;
 import model.ohsung.EmailDataRepository;
@@ -13,6 +15,7 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +54,6 @@ public class MainView {
 
         JSplitPane splitPane = createSplitPane();
         mainFrame.add(splitPane, BorderLayout.CENTER);
-
         mainFrame.setVisible(true);
     }
 
@@ -105,7 +107,6 @@ public class MainView {
                     getNaverEmails();
                     getGoogleEmails();
                 }
-
                 return null;
             }
 
@@ -124,6 +125,7 @@ public class MainView {
             String password = naverUserInfoDTO.getPassword();
 
             NaverConnector naverConnector = new NaverConnector(username, password);
+
             naverConnector.fetchAllMailFolders();
             naverConnector.disconnect();
 
@@ -184,15 +186,9 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-        naverUserInfoDTO.setUsername("99doldol@naver.com");
-        naverUserInfoDTO.setPassword("@rnjsdhtjd99");
-        loadEmailsInBackground(NAVER);
-
-        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
-        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
-        loadEmailsInBackground(GOOGLE);
+        AccConnectView accConnectView = new AccConnectView(nickname);
+        accConnectView.createAccConnectView();
     }
-
 
     private JPanel createCategoryPanel(DefaultListModel<String> naverFolderModel, DefaultListModel<String> googleFolderModel, JList<String[]> naverMailList, JList<String[]> googleMailList, JPanel cardPanel, CardLayout cardLayout) {
         // 네이버 메일 폴더 목록 생성
@@ -246,7 +242,6 @@ public class MainView {
 
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(splitPane, BorderLayout.CENTER);
-
         return panel;
     }
 
@@ -378,7 +373,7 @@ public class MainView {
                 JLabel senderLabel = new JLabel("보낸 사람: " + value[0]);
                 JLabel subjectLabel = new JLabel("제목: " + value[2]);
                 JLabel timeLabel = new JLabel("시간: " + value[3]);
-
+              
                 panel.add(senderLabel);
                 panel.add(subjectLabel);
                 panel.add(timeLabel);
@@ -395,8 +390,6 @@ public class MainView {
 
         mailList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-
-
         // 항목 선택 시 상세 정보 표시
         mailList.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -405,12 +398,12 @@ public class MainView {
                     int index = mailList.getSelectedIndex();
                     if (index >= 0) {
                         String[] value = mailList.getModel().getElementAt(index);
+
                         if(browser == NAVER){
                             contentMailPanel.updateValue(value, index, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
                         } else if(browser == GOOGLE){
                             contentMailPanel.updateValue(value, index, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
                         }
-
                         cardLayout.show(cardPanel, "detailPanel");
                     }
                 }

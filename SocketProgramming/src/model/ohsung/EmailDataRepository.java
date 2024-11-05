@@ -6,9 +6,6 @@ import java.util.List;
 public class EmailDataRepository {
     // 싱글톤 인스턴스
     private static final EmailDataRepository INSTANCE = new EmailDataRepository();
-
-
-
     private List<String[]> googleInBoxMailData;
     private List<String[]> googleSentMailData;
     private List<String[]> googleTrashMailData;
@@ -27,7 +24,7 @@ public class EmailDataRepository {
     public static EmailDataRepository getInstance() {
         return INSTANCE;
     }
-
+  
     public List<String[]> getGoogleInBoxMailData() {
         return googleInBoxMailData;
     }
