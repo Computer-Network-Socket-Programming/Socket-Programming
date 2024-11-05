@@ -54,6 +54,7 @@ public class MainView {
 
         JSplitPane splitPane = createSplitPane();
         mainFrame.add(splitPane, BorderLayout.CENTER);
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setVisible(true);
     }
 
@@ -186,7 +187,7 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-        AccConnectView accConnectView = new AccConnectView(nickname);
+        AccConnectView accConnectView = new AccConnectView(nickname, naverUserInfoDTO, googleUserInfoDTO);
         accConnectView.createAccConnectView();
     }
 
@@ -338,11 +339,12 @@ public class MainView {
         }
 
         // Populate models
-        for (String[] mail : naverMails) {
-            naverListModel.addElement(mail);
+        for(int i = naverMails.size()-1; i >= 0; i--){
+            naverListModel.addElement(naverMails.get(i));
         }
-        for (String[] mail : googleMails) {
-            googleListModel.addElement(mail);
+
+        for(int i = googleMails.size()-1; i >= 0; i--){
+            googleListModel.addElement(googleMails.get(i));
         }
 
         naverMailList.setModel(naverListModel);
