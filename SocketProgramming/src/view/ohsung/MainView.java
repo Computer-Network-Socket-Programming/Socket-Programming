@@ -1,6 +1,5 @@
 package view.ohsung;
 
-
 import view.AccConnectView;
 import controller.ohsung.GmailConnector;
 import controller.ohsung.NaverConnector;
@@ -8,6 +7,7 @@ import model.ohsung.EmailDataRepository;
 import model.ohsung.GoogleUserInfoDTO;
 import model.ohsung.NaverUserInfoDTO;
 import view.ContentMailPanel;
+import view.SenderFrame;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -31,7 +31,6 @@ public class MainView {
     private NaverUserInfoDTO naverUserInfoDTO;
     private GoogleUserInfoDTO googleUserInfoDTO;
     private ContentMailPanel contentMailPanel;
-    private NaverConnector naverConnector;
     private int NAVER = 1;
     private int GOOGLE = 2;
     private int BOTH = 3;
@@ -160,18 +159,31 @@ public class MainView {
 
     //메일 보내기 버튼 이벤트 생성 함수
     private void createSendMailButtonEvent(JButton sendMailButton){
-        sendMailButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //메일 보내기 프레임 생성 함수
-                showSendMailPopup();
-            }
-        });
+        sendMailButton.addActionListener(e -> showSendMailPopup());
     }
 
     //여기에 메일 보내기 FRAME 집어 넣으면 됨(상혁 파트)
     private void showSendMailPopup(){
+        String platform = (String) JOptionPane.showInputDialog(null, "메일을 보낼 플랫폼을 선택하세요.", "메일 보내기", JOptionPane.QUESTION_MESSAGE, null, new String[]{"네이버", "구글"}, "네이버");
+        String username = null, password = null;
+        if (platform == null || platform.isEmpty()) {
+            return;
+        }
 
+        if (platform.equals("네이버")) {
+            username = this.naverUserInfoDTO.getUsername();
+            password = this.naverUserInfoDTO.getPassword();
+        } else if (platform.equals("구글")) {
+            username = this.googleUserInfoDTO.getUsername();
+            password = this.googleUserInfoDTO.getPassword();
+        }
+
+        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "해당 계정을 연동해주세요.");
+            return;
+        }
+
+        SenderFrame senderFrame = new SenderFrame(username, password);
     }
 
     //이메일 인증 버튼 이벤트 함수
