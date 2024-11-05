@@ -120,9 +120,6 @@ public class GmailConnector {
         return mails;
     }
 
-
-
-
     public void fetchAllMailFolders() throws Exception {
         EmailDataRepository repository = EmailDataRepository.getInstance();
 
