@@ -35,6 +35,7 @@ public class SmtpController {
         String responseValue = inFromServer.readLine(); // 서버 응답 확인
 
         System.out.println("Response: " + responseValue);
+        System.out.println(username + password + "\n");
 
         for (String command : commands) {
             // 명령어 전송
