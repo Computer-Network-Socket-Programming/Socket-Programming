@@ -8,6 +8,7 @@ import model.ohsung.EmailDataRepository;
 import model.ohsung.GoogleUserInfoDTO;
 import model.ohsung.NaverUserInfoDTO;
 import view.ContentMailPanel;
+import view.SenderFrame;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -31,7 +32,6 @@ public class MainView {
     private NaverUserInfoDTO naverUserInfoDTO;
     private GoogleUserInfoDTO googleUserInfoDTO;
     private ContentMailPanel contentMailPanel;
-    private NaverConnector naverConnector;
     private int NAVER = 1;
     private int GOOGLE = 2;
     private int BOTH = 3;
@@ -40,6 +40,8 @@ public class MainView {
         this.nickname = userId;
         this.naverUserInfoDTO = new NaverUserInfoDTO();
         this.googleUserInfoDTO = new GoogleUserInfoDTO();
+        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
+        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
     }
 
     public void createMainFrame() {
@@ -58,7 +60,7 @@ public class MainView {
         mainFrame.setVisible(true);
     }
 
-    private JPanel createTopPanel(){
+    private JPanel createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
 
         JButton sendMailButton = new JButton("메일 보내기");
@@ -76,18 +78,22 @@ public class MainView {
         return topPanel;
     }
 
-    private void createRefreshButtonEvent(JButton button){
-        button.addActionListener(e->{
-            if (naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) {
+    private void createRefreshButtonEvent(JButton button) {
+        button.addActionListener(e -> {
+            if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() == null && googleUserInfoDTO.getPassword() == null)) {
                 loadEmailsInBackground(NAVER);
+            } else if ((naverUserInfoDTO.getUsername() == null && naverUserInfoDTO.getPassword() == null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
+                loadEmailsInBackground(GOOGLE);
+            } else if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
+                loadEmailsInBackground(NAVER);
+                loadEmailsInBackground(GOOGLE);
             } else {
-                JOptionPane.showMessageDialog(null, "네이버 계정을 연동해주세요.");
+                JOptionPane.showMessageDialog(null, "메일 계정을 1개 이상 연동해주세요.");
             }
         });
     }
 
-    private void loadEmailsInBackground(int browser) {
-
+    public void loadEmailsInBackground(int browser) {
         final JDialog loadingDialog = new JDialog(mainFrame, "로딩 중...", false);
         loadingDialog.setSize(200, 100);
         loadingDialog.setLocationRelativeTo(mainFrame);
@@ -100,11 +106,11 @@ public class MainView {
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                if(browser == NAVER){
+                if (browser == NAVER) {
                     getNaverEmails();
-                } else if(browser == GOOGLE){
+                } else if (browser == GOOGLE) {
                     getGoogleEmails();
-                } else if(browser == BOTH){
+                } else if (browser == BOTH) {
                     getNaverEmails();
                     getGoogleEmails();
                 }
@@ -120,8 +126,8 @@ public class MainView {
         worker.execute();
     }
 
-    private void getNaverEmails(){
-        try{
+    private void getNaverEmails() {
+        try {
             String username = naverUserInfoDTO.getUsername();
             String password = naverUserInfoDTO.getPassword();
 
@@ -130,13 +136,13 @@ public class MainView {
             naverConnector.fetchAllMailFolders();
             naverConnector.disconnect();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private void getGoogleEmails(){
-        try{
+    private void getGoogleEmails() {
+        try {
             String username = googleUserInfoDTO.getUsername();
             String password = googleUserInfoDTO.getPassword();
 
@@ -144,7 +150,7 @@ public class MainView {
             gmailConnector.fetchAllMailFolders();
             gmailConnector.disconnect();
 
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -159,7 +165,7 @@ public class MainView {
     }
 
     //메일 보내기 버튼 이벤트 생성 함수
-    private void createSendMailButtonEvent(JButton sendMailButton){
+    private void createSendMailButtonEvent(JButton sendMailButton) {
         sendMailButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -170,25 +176,41 @@ public class MainView {
     }
 
     //여기에 메일 보내기 FRAME 집어 넣으면 됨(상혁 파트)
-    private void showSendMailPopup(){
+    private void showSendMailPopup() {
+        String platform = (String) JOptionPane.showInputDialog(null, "메일을 보낼 플랫폼을 선택하세요.", "메일 보내기", JOptionPane.QUESTION_MESSAGE, null, new String[]{"네이버", "구글"}, "네이버");
+        String username = null, password = null;
 
+        if (platform == null || platform.isEmpty()) {
+            return;
+        }
+
+        switch (platform) {
+            case "네이버":
+                username = this.naverUserInfoDTO.getUsername();
+                password = this.naverUserInfoDTO.getPassword();
+                break;
+            case "구글":
+                username = this.googleUserInfoDTO.getUsername();
+                password = this.googleUserInfoDTO.getPassword();
+                break;
+            default:
+                break;
+        }
+
+        if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(null, platform + " 계정을 연동해주세요.");
+            return;
+        }
+
+        new SenderFrame(username, password);
     }
 
     //이메일 인증 버튼 이벤트 함수
-    private void createVerifyEmailButtonEvent(JButton verifyEmailButton){
-        verifyEmailButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                //이메일 인증 프레임 생성 함수
-                showVerifyEmailPopup();
-            }
+    private void createVerifyEmailButtonEvent(JButton verifyEmailButton) {
+        verifyEmailButton.addActionListener(e -> {
+            //이메일 인증 프레임 생성 함수
+            new AccConnectView(nickname, naverUserInfoDTO, googleUserInfoDTO).createAccConnectView();
         });
-    }
-
-    //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
-    private void showVerifyEmailPopup(){
-        AccConnectView accConnectView = new AccConnectView(nickname, naverUserInfoDTO, googleUserInfoDTO);
-        accConnectView.createAccConnectView();
     }
 
     private JPanel createCategoryPanel(DefaultListModel<String> naverFolderModel, DefaultListModel<String> googleFolderModel, JList<String[]> naverMailList, JList<String[]> googleMailList, JPanel cardPanel, CardLayout cardLayout) {
@@ -257,49 +279,49 @@ public class MainView {
         return panel;
     }
 
-    private void updateInBoxNaver(List<String[]> mails){
+    private void updateInBoxNaver(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getNaverInBoxMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateInBoxGoogle(List<String[]> mails){
+    private void updateInBoxGoogle(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getGoogleInBoxMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateSentBoxNaver(List<String[]> mails){
+    private void updateSentBoxNaver(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getNaverSentMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateSentBoxGoogle(List<String[]> mails){
+    private void updateSentBoxGoogle(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getGoogleSentMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateDraftsBoxNaver(List<String[]> mails){
+    private void updateDraftsBoxNaver(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getNaverDraftMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateDraftBoxGoogle(List<String[]> mails){
+    private void updateDraftBoxGoogle(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getGoogleDraftMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateTrashBoxNaver(List<String[]> mails){
+    private void updateTrashBoxNaver(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getNaverTrashMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateTrashBoxGoogle(List<String[]> mails){
+    private void updateTrashBoxGoogle(List<String[]> mails) {
         for (String[] mail : EmailDataRepository.getInstance().getGoogleTrashMailData()) {
             mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
@@ -333,6 +355,7 @@ public class MainView {
                 break;
             case "g받은메일함":
                 updateInBoxGoogle(googleMails);
+                System.out.println(EmailDataRepository.getInstance().getGoogleInBoxMailData());
                 activeScrollPane = new JScrollPane(googleMailList);
                 break;
             case "g보낸메일함":
@@ -350,11 +373,11 @@ public class MainView {
         }
 
         // Populate models
-        for(int i = naverMails.size()-1; i >= 0; i--){
+        for (int i = naverMails.size() - 1; i >= 0; i--) {
             naverListModel.addElement(naverMails.get(i));
         }
 
-        for(int i = googleMails.size()-1; i >= 0; i--){
+        for (int i = googleMails.size() - 1; i >= 0; i--) {
             googleListModel.addElement(googleMails.get(i));
         }
 
@@ -371,7 +394,6 @@ public class MainView {
     }
 
 
-
     private JList<String[]> createMailList(JPanel cardPanel, CardLayout cardLayout, int browser) {
         DefaultListModel<String[]> listModel = new DefaultListModel<>();
         JList<String[]> mailList = new JList<>(listModel);
@@ -386,7 +408,7 @@ public class MainView {
                 JLabel senderLabel = new JLabel("보낸 사람: " + value[0]);
                 JLabel subjectLabel = new JLabel("제목: " + value[2]);
                 JLabel timeLabel = new JLabel("시간: " + value[3]);
-              
+
                 panel.add(senderLabel);
                 panel.add(subjectLabel);
                 panel.add(timeLabel);
@@ -412,10 +434,11 @@ public class MainView {
                     if (index >= 0) {
                         String[] value = mailList.getModel().getElementAt(index);
 
-                        if(browser == NAVER){
-                            contentMailPanel.updateValue(value, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
-                        } else if(browser == GOOGLE){
-                            contentMailPanel.updateValue(value, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
+                        if (browser == NAVER) {
+                            contentMailPanel.updateValue(value, index, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
+                        } else if (browser == GOOGLE) {
+                            contentMailPanel.updateValue(value, index, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
+
                         }
                         cardLayout.show(cardPanel, "detailPanel");
                     }
