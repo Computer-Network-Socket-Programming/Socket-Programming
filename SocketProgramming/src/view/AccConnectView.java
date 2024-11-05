@@ -2,12 +2,15 @@ package view;
 
 import model.ohsung.GoogleUserInfoDTO;
 import model.ohsung.NaverUserInfoDTO;
+import util.enums.SmtpStatusCode;
+import controller.SmtpController;
 import view.ohsung.MainView;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.util.Objects;
 
 public class AccConnectView {
@@ -15,6 +18,19 @@ public class AccConnectView {
     private JComboBox<String> portalComboBox;
     private JTextField idField;
     private JPasswordField passwordField;
+
+    public boolean isValidate(String userId, String userPassword){
+        SmtpController stmpCon = new SmtpController(userId, userPassword);
+        SmtpStatusCode checkValidate = null;
+        try {
+            checkValidate = stmpCon.authenticate(userId, userPassword);
+            if ( checkValidate.getCode() == 221 ) return true;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        return false;
+    }
 
     public AccConnectView(String nickname){
         this.nickname = nickname;
@@ -28,7 +44,7 @@ public class AccConnectView {
         accFrame.setLayout(null);
 
         JLabel ml = new JLabel("연동할 계정의 아이디와 비밀번호를 입력해주세요\n");
-        String[] portals = { "Naver", "Gmail", "Daum" };
+        String[] portals = { "Naver", "Gmail" };
         portalComboBox = new JComboBox<>(portals);
         JLabel idLabel = new JLabel("ID :");
         JTextField idField = new JTextField();
@@ -80,28 +96,38 @@ public class AccConnectView {
 
                 // 확인 버튼이 눌렸을 때 수행할 동작
                 if (result == JOptionPane.OK_OPTION) {
-                    // executeLogin(userInfo);  // 로그인 로직 실행
-                    // validInfo인지 확인하기
+
+                    // userId 정보 처리
                     switch(Objects.requireNonNull(selectedPortal)){
                         case "Naver" :
-                            NaverUserInfoDTO naverInfo = NaverUserInfoDTO.getInstance();
-                            naverInfo.setUsername(userId);
-                            naverInfo.setPassword(userPassword);
+                            userId = ( userId.contains("@naver.com") ) ? userId : userId + "@naver.com";
 
-                            System.out.println(naverInfo.getUsername() + "\n" + naverInfo.getPassword());
+                            if ( isValidate(userId, userPassword) ){
+                                NaverUserInfoDTO naverUserInfoDTO = NaverUserInfoDTO.getInstance();
+                                naverUserInfoDTO.setUsername(userId);
+                                naverUserInfoDTO.setPassword(userPassword);
 
-                            accFrame.dispose();
-                            MainView mainView = new MainView(nickname);
-                            mainView.createMainFrame();
-                            //
+                                accFrame.dispose();
+                                MainView mainView = new MainView(nickname);
+                                mainView.createMainFrame();
+                            }
+
                             break;
+
                         case "Google" :
-                            GoogleUserInfoDTO googleInfo = GoogleUserInfoDTO.getInstance();
-                            googleInfo.setUsername(userId);
-                            googleInfo.setPassword(userPassword);
+                            userId = ( userId.contains("@google.com") ) ? userId : userId + "@google.com";
+
+                            if ( isValidate(userId, userPassword) ){
+                                GoogleUserInfoDTO googleInfo = GoogleUserInfoDTO.getInstance();
+                                googleInfo.setUsername(userId);
+                                googleInfo.setPassword(userPassword);
+
+                                accFrame.dispose();
+                                MainView mainView = new MainView(nickname);
+                                mainView.createMainFrame();
+                            }
                             break;
-                        case "Daum" :
-                            break;
+
                         default :
                             // 아이디와 비밀번호를 다시 입력해주세요 ! 알림 뜨게 하기
                             break;
