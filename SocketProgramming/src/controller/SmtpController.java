@@ -22,13 +22,13 @@ public class SmtpController {
         // 이메일 주소의 도메인에 따라 SMTP 서버를 결정
         switch (senderAddress.split("@")[1]) {
             case "naver.com" -> this.mailPlatform = MailPlatform.NAVER;
-            case "google.com" -> this.mailPlatform = MailPlatform.GMAIL;
+            case "gmail.com" -> this.mailPlatform = MailPlatform.GMAIL;
             default -> this.mailPlatform = null;
         }
     }
 
     public SmtpStatusCode authenticate(String username, String password) throws IOException {
-        List<String> commands = SmtpCommand.createAuthCommands(username, password);
+        List<String> commands = SmtpCommand.createAuthCommands(username, password, this.mailPlatform);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
@@ -66,7 +66,7 @@ public class SmtpController {
      * @return 전송 결과를 나타내는 SmtpStatusCode
      */
     public SmtpStatusCode sendMail(SendMailDTO sendMailDTO) throws IOException, InterruptedException {
-        List<String> commands = SmtpCommand.createCommands(this.senderAddress, this.password, sendMailDTO);
+        List<String> commands = SmtpCommand.createCommands(this.senderAddress, this.password, sendMailDTO, this.mailPlatform);
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
@@ -112,7 +112,7 @@ public class SmtpController {
 
             // 그 이외의 예외 처리
             if (responseValue.startsWith("5")) {
-                return SmtpStatusCode.SYNTAX_ERROR;
+                return SmtpStatusCode.RECIPIENT_NOT_FOUND;
             } else if (responseValue.startsWith("4")) {
                 return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
             }
