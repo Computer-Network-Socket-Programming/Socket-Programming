@@ -202,6 +202,7 @@ public class SenderFrame extends JFrame {
                     // 10초 대기
                     Thread.sleep(10000);
                     sendEmails(sendMailDTOs);
+                    dispose();
                     return null;
                 }
             }.execute();
