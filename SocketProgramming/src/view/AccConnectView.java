@@ -194,13 +194,39 @@ public class AccConnectView {
 
                         case "Google":
                             userId = (userId.contains("@gmail.com")) ? userId : userId + "@gmail.com";
-                            isNotNull(selectedPortal, userId, userPassword);
-                            if (isValidate(userId, userPassword)) {
-                                googleUserInfoDTO.setUsername(userId);
-                                googleUserInfoDTO.setPassword(userPassword);
-                                accFrame.dispose();
-                                showSuccessMessage();
-                            } else showTryAgainBtn();
+                            notNull = isNotNull(selectedPortal, userId, userPassword);
+
+                            // 덮어쓰기 시도
+                            if (notNull) {
+                                if (askChangeAcc()) {
+                                    // 이미 연동된 계정인 경우
+                                    if (userId.equals(googleUserInfoDTO.getUsername()) && userPassword.equals(googleUserInfoDTO.getUsername())) {
+                                        showAlreadyConnectedBtn();
+                                    }
+                                    // 새 계정을 덮어쓰는 경우
+                                    else {
+                                        if (isValidate(userId, userPassword)) {
+                                            googleUserInfoDTO.setUsername(userId);
+                                            googleUserInfoDTO.setPassword(userPassword);
+
+                                            accFrame.dispose();
+                                            showSuccessMessage();
+                                        } else showTryAgainBtn();
+                                    }
+                                }
+
+                            }
+
+                            // 아예 새 연동
+                            else {
+                                if (isValidate(userId, userPassword)) {
+                                    googleUserInfoDTO.setUsername(userId);
+                                    googleUserInfoDTO.setPassword(userPassword);
+
+                                    accFrame.dispose();
+                                    showSuccessMessage();
+                                } else showTryAgainBtn();
+                            }
 
                             break;
 
@@ -227,7 +253,7 @@ public class AccConnectView {
 
     private void showSuccessMessage() {
         JOptionPane.showMessageDialog(null,
-                "새로고침을 눌러주떼욤!", // 중앙 정렬된 JLabel
+                "연동 성공! \n 새로고침을 눌러주떼욤!", // 중앙 정렬된 JLabel
                 "양쿤 러버", // 대화 상자 제목
                 JOptionPane.PLAIN_MESSAGE // 아이콘 없음
         );
