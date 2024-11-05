@@ -149,15 +149,9 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-
         AccConnectView accConnectView = new AccConnectView(nickname);
         accConnectView.createAccConnectView();
 
-//        naverUserInfoDTO.setUsername("99doldol@naver.com");
-//        naverUserInfoDTO.setPassword("@rnjsdhtjd99");
-
-//        System.out.println("일로옴");
-//        createMainFrame();
     }
 
 
