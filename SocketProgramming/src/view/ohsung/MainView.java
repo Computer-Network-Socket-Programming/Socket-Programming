@@ -1,7 +1,9 @@
 package view.ohsung;
 
+import controller.ohsung.GmailConnector;
 import controller.ohsung.NaverConnector;
 import model.ohsung.EmailDataRepository;
+import model.ohsung.GoogleUserInfoDTO;
 import model.ohsung.NaverUserInfoDTO;
 
 import javax.swing.*;
@@ -10,30 +12,33 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainView {
-    private String userId;
+    private JFrame mainFrame;
+    private String nickname;
     private JPanel detailPanel;
     private JLabel senderLabel;
     private JLabel subjectLabel;
+    private JPanel infoPanel;
     private JLabel timeLabel;
     private JTextArea messageContent;
-    private JPanel loadingPanel;
     private NaverUserInfoDTO naverUserInfoDTO;
+    private GoogleUserInfoDTO googleUserInfoDTO;
     private NaverConnector naverConnector;
+    private int NAVER = 1;
+    private int GOOGLE = 2;
+    private int BOTH = 3;
 
     public MainView(String userId) {
-        this.userId = userId;
+        this.nickname = userId;
         this.naverUserInfoDTO = new NaverUserInfoDTO();
+        this.googleUserInfoDTO = new GoogleUserInfoDTO();
     }
 
     public void createMainFrame() {
-        JFrame mainFrame = new JFrame("환영합니다 " + userId + "님!!");
+        mainFrame = new JFrame("환영합니다 " + nickname + "님!!");
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         mainFrame.setSize(1200, 700);
@@ -42,49 +47,70 @@ public class MainView {
         JPanel topPanel = createTopPanel();
         mainFrame.add(topPanel, BorderLayout.NORTH);
 
-        checkUserInfo(mainFrame);
+        JSplitPane splitPane = createSplitPane();
+        mainFrame.add(splitPane, BorderLayout.CENTER);
 
         mainFrame.setVisible(true);
     }
 
-    private void checkUserInfo(JFrame mainFrame){
-        if(naverUserInfoDTO.getUsername() == null || naverUserInfoDTO.getPassword() == null){
-            JLabel promptLabel = new JLabel("이메일 인증을 완료해주세요");
-            mainFrame.add(promptLabel, BorderLayout.CENTER);
-        } else{
-            showLoadingPanel(mainFrame);
-            loadNaverEmailsInBackground(mainFrame);
-        }
+    private JPanel createTopPanel(){
+        JPanel topPanel = new JPanel(new BorderLayout());
+
+        JButton sendMailButton = new JButton("메일 보내기");
+        JButton verifyEmailButton = new JButton("이메일 인증하기");
+        JButton refreshButton = new JButton("새로 고침");
+
+        topPanel.add(sendMailButton, BorderLayout.WEST);
+        topPanel.add(verifyEmailButton, BorderLayout.EAST);
+        topPanel.add(refreshButton, BorderLayout.CENTER);
+
+        createSendMailButtonEvent(sendMailButton);
+        createVerifyEmailButtonEvent(verifyEmailButton);
+        createRefreshButtonEvent(refreshButton);
+
+        return topPanel;
     }
 
-    private void showLoadingPanel(JFrame mainFrame){
-        loadingPanel = new JPanel();
-        JLabel loadingLabel = new JLabel("메일을 불러오는 중입니다...");
-        loadingPanel.add(loadingLabel);
-        mainFrame.add(loadingPanel, BorderLayout.CENTER);
-
-        mainFrame.revalidate();
-        mainFrame.repaint();
+    private void createRefreshButtonEvent(JButton button){
+        button.addActionListener(e->{
+            if (naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) {
+                loadEmailsInBackground(NAVER);
+            } else {
+                JOptionPane.showMessageDialog(null, "네이버 계정을 연동해주세요.");
+            }
+        });
     }
 
-    private void loadNaverEmailsInBackground(JFrame mainFrame) {
+    private void loadEmailsInBackground(int browser) {
+
+        final JDialog loadingDialog = new JDialog(mainFrame, "로딩 중...", false);
+        loadingDialog.setSize(200, 100);
+        loadingDialog.setLocationRelativeTo(mainFrame);
+        loadingDialog.add(new JLabel("메일을 불러오는 중입니다...", SwingConstants.CENTER));
+
+        // SwingWorker 실행 전 로딩 대화창을 먼저 표시
+        loadingDialog.setVisible(true);
+
         // 백그라운드에서 메일을 로드하는 작업 실행
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                getNaverEmails();
+                if(browser == NAVER){
+                    getNaverEmails();
+                } else if(browser == GOOGLE){
+                    getGoogleEmails();
+                } else if(browser == BOTH){
+                    getNaverEmails();
+                    getGoogleEmails();
+                }
+
                 return null;
             }
 
             @Override
             protected void done() {
                 // 로딩 패널 제거 및 메일 목록 UI 표시
-                mainFrame.remove(loadingPanel);
-                JSplitPane splitPane = createSplitPane();
-                mainFrame.add(splitPane, BorderLayout.CENTER);
-
-                mainFrame.revalidate();
-                mainFrame.repaint();
+                loadingDialog.dispose();
             }
         };
         worker.execute();
@@ -96,7 +122,7 @@ public class MainView {
             String password = naverUserInfoDTO.getPassword();
 
             NaverConnector naverConnector = new NaverConnector(username, password);
-            naverConnector.fetchMails();
+            naverConnector.fetchAllMailFolders();
             naverConnector.disconnect();
 
         } catch (Exception e){
@@ -104,19 +130,27 @@ public class MainView {
         }
     }
 
-    private JPanel createTopPanel(){
-        JPanel topPanel = new JPanel(new BorderLayout());
+    private void getGoogleEmails(){
+        try{
+            String username = googleUserInfoDTO.getUsername();
+            String password = googleUserInfoDTO.getPassword();
 
-        JButton sendMailButton = new JButton("메일 보내기");
-        JButton verifyEmailButton = new JButton("이메일 인증하기");
+            GmailConnector gmailConnector = new GmailConnector(username, password);
+            gmailConnector.fetchAllMailFolders();
+            gmailConnector.disconnect();
 
-        topPanel.add(sendMailButton, BorderLayout.WEST);
-        topPanel.add(verifyEmailButton, BorderLayout.EAST);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
 
-        createSendMailButtonEvent(sendMailButton);
-        createVerifyEmailButtonEvent(verifyEmailButton);
+    private void showMessageInCardPanel(JPanel cardPanel, CardLayout cardLayout, String message) {
+        JPanel messagePanel = new JPanel(new BorderLayout());
+        JLabel messageLabel = new JLabel(message, SwingConstants.CENTER);
+        messagePanel.add(messageLabel, BorderLayout.CENTER);
 
-        return topPanel;
+        cardPanel.add(messagePanel, "messagePanel");
+        cardLayout.show(cardPanel, "messagePanel");
     }
 
     //메일 보내기 버튼 이벤트 생성 함수
@@ -148,69 +182,185 @@ public class MainView {
 
     //이메일 인증 프레임 집어 넣으면 됨(지원님 파트)
     private void showVerifyEmailPopup(){
-        naverUserInfoDTO.setUsername("아이디");
-        naverUserInfoDTO.setPassword("비밀번호");
+        naverUserInfoDTO.setUsername("99doldol@naver.com");
+        naverUserInfoDTO.setPassword("@rnjsdhtjd99");
+        loadEmailsInBackground(NAVER);
 
-        createMainFrame();
+        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
+        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
+        loadEmailsInBackground(GOOGLE);
     }
 
 
-    private JPanel createCategoryPanel(DefaultListModel<String> folderModel, JList<String[]> mailList, JPanel cardPanel, CardLayout cardLayout) {
-        JList<String> folderList = new JList<>(folderModel);
-        folderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-
-        folderList.addListSelectionListener(new ListSelectionListener() {
-            @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (!e.getValueIsAdjusting()) {
-                    String selectedFolder = folderList.getSelectedValue();
-                    updateMailList(mailList, selectedFolder);
+    private JPanel createCategoryPanel(DefaultListModel<String> naverFolderModel, DefaultListModel<String> googleFolderModel, JList<String[]> naverMailList, JList<String[]> googleMailList, JPanel cardPanel, CardLayout cardLayout) {
+        // 네이버 메일 폴더 목록 생성
+        JList<String> naverFolderList = new JList<>(naverFolderModel);
+        JList<String> googleFolderList = new JList<>(googleFolderModel);
+        naverFolderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        naverFolderList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                String selectedFolder = naverFolderList.getSelectedValue();
+                if (naverUserInfoDTO.getUsername() == null || naverUserInfoDTO.getPassword() == null) {
+                    showMessageInCardPanel(cardPanel, cardLayout, "네이버 계정을 연동해주세요.");
+                } else {
+                    updateMailList(naverMailList, googleMailList, selectedFolder);
+                    cardLayout.show(cardPanel, "infoPanel");
                 }
             }
         });
 
+        // 구글 메일 폴더 목록 생성
+
+        googleFolderList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        googleFolderList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                String selectedFolder = googleFolderList.getSelectedValue();
+                if (googleUserInfoDTO.getUsername() == null || googleUserInfoDTO.getPassword() == null) {
+                    showMessageInCardPanel(cardPanel, cardLayout, "구글 계정을 연동해주세요.");
+                } else {
+                    updateMailList(naverMailList, googleMailList, selectedFolder);
+                    cardLayout.show(cardPanel, "infoPanel");
+                }
+            }
+        });
+
+        // 네이버 폴더와 구글 폴더 각각에 스크롤 패널 추가
+        JScrollPane naverScrollPane = new JScrollPane(naverFolderList);
+        JScrollPane googleScrollPane = new JScrollPane(googleFolderList);
+
+        // 네이버와 구글 폴더를 포함하는 패널 생성
+        JPanel naverPanel = new JPanel(new BorderLayout());
+        naverPanel.add(new JLabel("네이버 메일 폴더", JLabel.LEFT), BorderLayout.NORTH);
+        naverPanel.add(naverScrollPane, BorderLayout.CENTER);
+
+        JPanel googlePanel = new JPanel(new BorderLayout());
+        googlePanel.add(new JLabel("구글 메일 폴더", JLabel.LEFT), BorderLayout.NORTH);
+        googlePanel.add(googleScrollPane, BorderLayout.CENTER);
+
+        // 네이버와 구글 패널을 JSplitPane으로 나누어 상단과 하단으로 배치
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, naverPanel, googlePanel);
+        splitPane.setResizeWeight(0.5); // 상하 패널 크기 비율 설정
+        splitPane.setDividerSize(5);    // 구분선 크기 설정
+
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(new JLabel("메일 폴더", JLabel.LEFT), BorderLayout.NORTH);
-        panel.add(new JScrollPane(folderList), BorderLayout.CENTER);
+        panel.add(splitPane, BorderLayout.CENTER);
 
         return panel;
     }
 
     private void updateInBoxNaver(List<String[]> mails){
-        for (String[] mail : EmailDataRepository.getInstance().getMailData()) {
-            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3]});
+        for (String[] mail : EmailDataRepository.getInstance().getNaverInBoxMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
         }
     }
 
-    private void updateMailList(JList<String[]> mailList, String folderName) {
-        DefaultListModel<String[]> listModel = new DefaultListModel<>();
+    private void updateInBoxGoogle(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getGoogleInBoxMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
 
-        List<String[]> mails = new ArrayList<>();
+    private void updateSentBoxNaver(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getNaverSentMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateSentBoxGoogle(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getGoogleSentMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateDraftsBoxNaver(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getNaverDraftMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateDraftBoxGoogle(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getGoogleDraftMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateTrashBoxNaver(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getNaverTrashMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateTrashBoxGoogle(List<String[]> mails){
+        for (String[] mail : EmailDataRepository.getInstance().getGoogleTrashMailData()) {
+            mails.add(new String[]{mail[0], mail[1], mail[2], mail[3], mail[4]});
+        }
+    }
+
+    private void updateMailList(JList<String[]> naverMailList, JList<String[]> googleMailList, String folderName) {
+        DefaultListModel<String[]> naverListModel = new DefaultListModel<>();
+        DefaultListModel<String[]> googleListModel = new DefaultListModel<>();
+
+        List<String[]> naverMails = new ArrayList<>();
+        List<String[]> googleMails = new ArrayList<>();
+
+        JScrollPane activeScrollPane = null; // 현재 표시할 스크롤 패널
+
         switch (folderName) {
             case "받은메일함":
-                updateInBoxNaver(mails);
+                updateInBoxNaver(naverMails);
+                activeScrollPane = new JScrollPane(naverMailList);
                 break;
             case "보낸메일함":
-                mails.add(new String[]{"Charlie", "보낸 메일 제목 1", "2024-11-01 12:00"});
-                mails.add(new String[]{"David", "보낸 메일 제목 2", "2024-11-01 13:00"});
+                updateSentBoxNaver(naverMails);
+                activeScrollPane = new JScrollPane(naverMailList);
                 break;
             case "임시보관함":
-                mails.add(new String[]{"Eve", "임시 메일 제목 1", "2024-11-01 14:00"});
-                break;
-            case "내게쓴메일함":
-                mails.add(new String[]{"Frank", "내게 쓴 메일 제목", "2024-11-01 16:00"});
+                updateDraftsBoxNaver(naverMails);
+                activeScrollPane = new JScrollPane(naverMailList);
                 break;
             case "휴지통":
-                mails.add(new String[]{"Grace", "삭제된 메일 제목", "2024-11-01 18:00"});
+                updateTrashBoxNaver(naverMails);
+                activeScrollPane = new JScrollPane(naverMailList);
+                break;
+            case "g받은메일함":
+                updateInBoxGoogle(googleMails);
+                activeScrollPane = new JScrollPane(googleMailList);
+                break;
+            case "g보낸메일함":
+                updateSentBoxGoogle(googleMails);
+                activeScrollPane = new JScrollPane(googleMailList);
+                break;
+            case "g임시보관함":
+                updateDraftBoxGoogle(googleMails);
+                activeScrollPane = new JScrollPane(googleMailList);
+                break;
+            case "g휴지통":
+                updateTrashBoxGoogle(googleMails);
+                activeScrollPane = new JScrollPane(googleMailList);
                 break;
         }
 
-        for (String[] mail : mails) {
-            listModel.addElement(mail);
+        // Populate models
+        for (String[] mail : naverMails) {
+            naverListModel.addElement(mail);
+        }
+        for (String[] mail : googleMails) {
+            googleListModel.addElement(mail);
         }
 
-        mailList.setModel(listModel);
+        naverMailList.setModel(naverListModel);
+        googleMailList.setModel(googleListModel);
+
+        // `infoPanel`의 내용을 동적으로 변경
+        if (activeScrollPane != null) {
+            infoPanel.removeAll(); // 이전 내용 제거
+            infoPanel.add(activeScrollPane, BorderLayout.CENTER); // 새로운 메일 리스트 스크롤 패널 추가
+            infoPanel.revalidate();
+            infoPanel.repaint();
+        }
     }
+
+
 
     private JList<String[]> createMailList(JPanel cardPanel, CardLayout cardLayout) {
         DefaultListModel<String[]> listModel = new DefaultListModel<>();
@@ -224,8 +374,8 @@ public class MainView {
                 panel.setPreferredSize(new Dimension(500, 60));
 
                 JLabel senderLabel = new JLabel("보낸 사람: " + value[0]);
-                JLabel subjectLabel = new JLabel("제목: " + value[1]);
-                JLabel timeLabel = new JLabel("시간: " + value[2]);
+                JLabel subjectLabel = new JLabel("제목: " + value[2]);
+                JLabel timeLabel = new JLabel("시간: " + value[3]);
 
                 panel.add(senderLabel);
                 panel.add(subjectLabel);
@@ -251,7 +401,7 @@ public class MainView {
                     int index = mailList.getSelectedIndex();
                     if (index >= 0) {
                         String[] value = mailList.getModel().getElementAt(index);
-                        updateDetailPanel(value[0], value[1], value[2], value[3]);
+                        updateDetailPanel(value[0], value[1], value[2], value[3], value[4]);
                         cardLayout.show(cardPanel, "detailPanel");
                     }
                 }
@@ -267,7 +417,7 @@ public class MainView {
         senderLabel = new JLabel();
         subjectLabel = new JLabel();
         timeLabel = new JLabel();
-        messageContent = new JTextArea("메일 내용 표시...");
+        messageContent = new JTextArea("");
         messageContent.setLineWrap(true);
         messageContent.setWrapStyleWord(true);
 
@@ -284,29 +434,35 @@ public class MainView {
         return detailPanel;
     }
 
-    private void updateDetailPanel(String sender, String subject, String time, String text) {
+    private void updateDetailPanel(String sender, String receiver, String subject, String time, String text) {
         senderLabel.setText("보낸 사람: " + sender);
         subjectLabel.setText("제목: " + subject);
         timeLabel.setText("시간: " + time);
-        messageContent.setText("메일 내용 표시..." + text);  // 실제 메일 내용을 여기에 표시할 수 있습니다.
+        messageContent.setText(text);  // 실제 메일 내용을 여기에 표시할 수 있습니다.
     }
 
     private JSplitPane createSplitPane() {
-        DefaultListModel<String> folderModel = new DefaultListModel<>();
-        folderModel.addElement("받은메일함");
-        folderModel.addElement("보낸메일함");
-        folderModel.addElement("임시보관함");
-        folderModel.addElement("내게쓴메일함");
-        folderModel.addElement("휴지통");
+        DefaultListModel<String> naverFolderModel = new DefaultListModel<>();
+        naverFolderModel.addElement("받은메일함");
+        naverFolderModel.addElement("보낸메일함");
+        naverFolderModel.addElement("임시보관함");
+        naverFolderModel.addElement("휴지통");
+
+        DefaultListModel<String> googleFolderModel = new DefaultListModel<>();
+        googleFolderModel.addElement("g받은메일함");
+        googleFolderModel.addElement("g보낸메일함");
+        googleFolderModel.addElement("g임시보관함");
+        googleFolderModel.addElement("g휴지통");
 
         CardLayout cardLayout = new CardLayout();
         JPanel cardPanel = new JPanel(cardLayout);
-        JList<String[]> mailList = createMailList(cardPanel, cardLayout);
+        JList<String[]> naverMailList = createMailList(cardPanel, cardLayout);
+        JList<String[]> googleMailList = createMailList(cardPanel, cardLayout);
 
-        JPanel infoPanel = new JPanel(new BorderLayout());
-        infoPanel.add(new JScrollPane(mailList), BorderLayout.CENTER);
+        infoPanel = new JPanel(new BorderLayout());
+        infoPanel.add(new JScrollPane(naverMailList), BorderLayout.CENTER);
 
-        JPanel categoryPanel = createCategoryPanel(folderModel, mailList, cardPanel, cardLayout);
+        JPanel categoryPanel = createCategoryPanel(naverFolderModel, googleFolderModel, naverMailList, googleMailList, cardPanel, cardLayout);
 
         cardPanel.add(infoPanel, "infoPanel");
         cardPanel.add(createDetailPanel(cardLayout, cardPanel), "detailPanel");
