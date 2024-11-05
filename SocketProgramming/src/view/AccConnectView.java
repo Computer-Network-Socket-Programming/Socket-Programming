@@ -23,7 +23,7 @@ public class AccConnectView {
     private GoogleUserInfoDTO googleUserInfoDTO;
 
     public boolean isValidate(String userId, String userPassword) {
-        SmtpController stmpCon = new SmtpController(userId, "nolb vtfr mqls hnjj");
+        SmtpController stmpCon = new SmtpController(userId, userPassword);
         SmtpStatusCode checkValidate = null;
         try {
             checkValidate = stmpCon.authenticate();
