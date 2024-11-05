@@ -1,4 +1,4 @@
-package model.ohsung;
+package model;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,6 @@
 package main;
 
-import controller.ohsung.NaverConnector;
-import model.ohsung.EmailDataRepository;
 import view.LoginView;
-import view.ohsung.MainView;
 
 public class Main {
 

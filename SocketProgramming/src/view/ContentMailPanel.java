@@ -99,7 +99,7 @@ public class ContentMailPanel extends JPanel {
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == replyMailButton) {
                     ReplyMailDTO replyMailDTO = new ReplyMailDTO(
-                            mailInfoDTO.receiver(),
+                            mailInfoDTO.sender(),
                             "-----Original Message-----\n\n" + mailInfoDTO.content() + "\n\n"
                     );
                     new SenderFrame(username, password, replyMailDTO);

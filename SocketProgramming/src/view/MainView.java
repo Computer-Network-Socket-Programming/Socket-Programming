@@ -1,12 +1,12 @@
-package view.ohsung;
+package view;
 
 
 import view.AccConnectView;
-import controller.ohsung.GmailConnector;
-import controller.ohsung.NaverConnector;
-import model.ohsung.EmailDataRepository;
-import model.ohsung.GoogleUserInfoDTO;
-import model.ohsung.NaverUserInfoDTO;
+import controller.GmailConnector;
+import controller.NaverConnector;
+import model.EmailDataRepository;
+import model.GoogleUserInfoDTO;
+import model.NaverUserInfoDTO;
 import view.ContentMailPanel;
 import view.SenderFrame;
 
@@ -40,6 +40,8 @@ public class MainView {
         this.nickname = userId;
         this.naverUserInfoDTO = new NaverUserInfoDTO();
         this.googleUserInfoDTO = new GoogleUserInfoDTO();
+        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
+        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
     }
 
     public void createMainFrame() {

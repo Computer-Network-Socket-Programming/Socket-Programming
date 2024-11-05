@@ -258,8 +258,16 @@ public class SenderFrame extends JFrame {
             for (String recipient : recipients) {
                 String r = recipient.trim();
 
+                if (r.startsWith(":")) {
+                    r = r.substring(1);
+                }
+
+                r = r.trim();
+
                 if (r.startsWith("<")) {
-                    r = r.substring(0, r.length() - 1);
+                    int startIndex = r.indexOf("<");
+                    int lastIndex = r.lastIndexOf(">");
+                    r = r.substring(startIndex + 1, lastIndex);
                 }
 
                 sendMailDTOs.add(new SendMailDTO(r, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
@@ -267,9 +275,18 @@ public class SenderFrame extends JFrame {
         } else {
             String r = this.receiverField.getText().trim();
 
-            if (r.startsWith("<")) {
-                r = r.substring(0, r.length() - 1);
+            if (r.startsWith(":")) {
+                r = r.substring(1);
             }
+
+            r = r.trim();
+
+            if (r.startsWith("<")) {
+                int startIndex = r.indexOf("<");
+                int lastIndex = r.lastIndexOf(">");
+                r = r.substring(startIndex + 1, lastIndex);
+            }
+
             sendMailDTOs.add(new SendMailDTO(r, this.subjectField.getText(), this.messageArea.getText(), this.attachedFiles));
         }
 

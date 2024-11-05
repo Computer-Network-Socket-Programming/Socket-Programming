@@ -1,6 +1,6 @@
-package controller.ohsung;
+package controller;
 
-import model.ohsung.EmailDataRepository;
+import model.EmailDataRepository;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -34,7 +34,7 @@ public class GmailConnector {
         System.out.println(readResponse());
 
         sendCommand("a001 LOGIN \"" + username + "\" \"" + password + "\"");
-        System.out.println(readResponse());
+
     }
 
     private int getMailCount(String folderName) throws Exception {
@@ -67,7 +67,6 @@ public class GmailConnector {
         System.out.println(folderName + mailCount);
 
         sendCommand("a003 SELECT \"" + folderName + "\"");
-        readResponse();  // `SELECT` 응답
 
         List<String[]> mails = new ArrayList<>();
         sendCommand("a004 FETCH 3:5 (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])");
@@ -122,7 +121,6 @@ public class GmailConnector {
 
     public void fetchAllMailFolders() throws Exception {
         EmailDataRepository repository = EmailDataRepository.getInstance();
-
         repository.setGoogleTrashMailData(fetchMailData("INBOX"));                         // Inbox
         repository.setGoogleInBoxMailData(fetchMailData("[Gmail]/&vPSwuNO4ycDVaA-"));      // Sent Mail
         repository.setGoogleDraftMailData(fetchMailData("[Gmail]/&x4TC3Lz0rQDVaA-"));     // Drafts
@@ -135,6 +133,7 @@ public class GmailConnector {
     }
 
     private String readResponse() throws Exception {
+        System.out.println("서버 응답 확인 중...");
         StringBuilder response = new StringBuilder();
         String line;
 
@@ -146,12 +145,14 @@ public class GmailConnector {
                 break;
             }
         }
+
+        System.out.println("서버 응답 확인 완료");
         return response.toString();
     }
 
     public void disconnect() throws Exception {
         sendCommand("a005 LOGOUT");
-        System.out.println(readResponse());
+       // System.out.println(readResponse());
         reader.close();
         writer.close();
         socket.close();

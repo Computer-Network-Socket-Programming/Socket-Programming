@@ -1,11 +1,11 @@
 package view;
 
-import controller.ohsung.NaverConnector;
-import model.ohsung.GoogleUserInfoDTO;
-import model.ohsung.NaverUserInfoDTO;
+import controller.NaverConnector;
+import model.GoogleUserInfoDTO;
+import model.NaverUserInfoDTO;
 import util.enums.SmtpStatusCode;
 import controller.SmtpController;
-import view.ohsung.MainView;
+import view.MainView;
 
 import javax.swing.*;
 import java.awt.*;

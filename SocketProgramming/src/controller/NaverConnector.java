@@ -1,6 +1,6 @@
-package controller.ohsung;
+package controller;
 
-import model.ohsung.EmailDataRepository;
+import model.EmailDataRepository;
 
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;

@@ -1,4 +1,4 @@
-package model.ohsung;
+package model;
 
 public class GoogleUserInfoDTO {
 

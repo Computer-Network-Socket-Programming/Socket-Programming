@@ -1,6 +1,5 @@
 package view;
 
-import view.ohsung.MainView;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
