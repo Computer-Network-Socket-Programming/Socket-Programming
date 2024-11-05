@@ -5,6 +5,7 @@ import controller.ohsung.NaverConnector;
 import model.ohsung.EmailDataRepository;
 import model.ohsung.GoogleUserInfoDTO;
 import model.ohsung.NaverUserInfoDTO;
+import view.ContentMailPanel;
 
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
@@ -26,6 +27,7 @@ public class MainView {
     private JTextArea messageContent;
     private NaverUserInfoDTO naverUserInfoDTO;
     private GoogleUserInfoDTO googleUserInfoDTO;
+    private ContentMailPanel contentMailPanel;
     private NaverConnector naverConnector;
     private int NAVER = 1;
     private int GOOGLE = 2;
@@ -362,7 +364,7 @@ public class MainView {
 
 
 
-    private JList<String[]> createMailList(JPanel cardPanel, CardLayout cardLayout) {
+    private JList<String[]> createMailList(JPanel cardPanel, CardLayout cardLayout, int browser) {
         DefaultListModel<String[]> listModel = new DefaultListModel<>();
         JList<String[]> mailList = new JList<>(listModel);
 
@@ -393,6 +395,8 @@ public class MainView {
 
         mailList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
+
+
         // 항목 선택 시 상세 정보 표시
         mailList.addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -401,7 +405,12 @@ public class MainView {
                     int index = mailList.getSelectedIndex();
                     if (index >= 0) {
                         String[] value = mailList.getModel().getElementAt(index);
-                        updateDetailPanel(value[0], value[1], value[2], value[3], value[4]);
+                        if(browser == NAVER){
+                            contentMailPanel.updateValue(value, index, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
+                        } else if(browser == GOOGLE){
+                            contentMailPanel.updateValue(value, index, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
+                        }
+
                         cardLayout.show(cardPanel, "detailPanel");
                     }
                 }
@@ -456,16 +465,18 @@ public class MainView {
 
         CardLayout cardLayout = new CardLayout();
         JPanel cardPanel = new JPanel(cardLayout);
-        JList<String[]> naverMailList = createMailList(cardPanel, cardLayout);
-        JList<String[]> googleMailList = createMailList(cardPanel, cardLayout);
+        JList<String[]> naverMailList = createMailList(cardPanel, cardLayout, NAVER);
+        JList<String[]> googleMailList = createMailList(cardPanel, cardLayout, GOOGLE);
 
         infoPanel = new JPanel(new BorderLayout());
         infoPanel.add(new JScrollPane(naverMailList), BorderLayout.CENTER);
 
         JPanel categoryPanel = createCategoryPanel(naverFolderModel, googleFolderModel, naverMailList, googleMailList, cardPanel, cardLayout);
 
+        contentMailPanel = new ContentMailPanel(cardLayout, cardPanel);
+
         cardPanel.add(infoPanel, "infoPanel");
-        cardPanel.add(createDetailPanel(cardLayout, cardPanel), "detailPanel");
+        cardPanel.add(contentMailPanel, "detailPanel");
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, categoryPanel, cardPanel);
         splitPane.setDividerLocation(300);

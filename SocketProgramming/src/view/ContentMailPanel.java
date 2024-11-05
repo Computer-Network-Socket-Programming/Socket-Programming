@@ -22,6 +22,8 @@ public class ContentMailPanel extends JPanel {
     GridLayout gridLayout;
     private int categoryIndex;
     private MailInfoDTO mailInfoDTO;
+    private String username;
+    private String password;
 
     public ContentMailPanel(CardLayout cardLayout, JPanel parentPanel) {
         borderLayout = new BorderLayout();
@@ -80,7 +82,7 @@ public class ContentMailPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (e.getSource() == mailListButton) {
-                    cardLayout.show(parentPanel, "MailListPanel");
+                    cardLayout.show(parentPanel, "infoPanel");
                 }
             }
         });
@@ -98,7 +100,7 @@ public class ContentMailPanel extends JPanel {
                                     mailInfoDTO.receiver(),
                                     "-----Original Message-----\n\n" + mailInfoDTO.content() + "\n\n"
                             );
-                            new SenderFrame("메일주소", "비밀번호", replyMailDTO);
+                            new SenderFrame(username, password, replyMailDTO);
                         }
                     }
                 });
@@ -123,7 +125,7 @@ public class ContentMailPanel extends JPanel {
                                     mailInfoDTO.subject(),
                                     mailInfoDTO.content()
                             );
-                            new SenderFrame("메일 주소", "비밀번호", deliverMailDTO);
+                            new SenderFrame(username, password, deliverMailDTO);
                         }
                     }
                 });
@@ -134,9 +136,11 @@ public class ContentMailPanel extends JPanel {
         }
     }
 
-    public void updateValue(String[] value, int index) {
+    public void updateValue(String[] value, int index, String username, String password) {
         this.mailInfoDTO = new MailInfoDTO(value[0], value[1], value[2], value[3], value[4]);
         this.categoryIndex = index;
+        this.password = password;
+        this.username = username;
 
         senderAddress.setText(mailInfoDTO.sender());
         receiverAddress.setText(mailInfoDTO.receiver());
