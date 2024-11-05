@@ -40,8 +40,6 @@ public class MainView {
         this.nickname = userId;
         this.naverUserInfoDTO = new NaverUserInfoDTO();
         this.googleUserInfoDTO = new GoogleUserInfoDTO();
-        googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
-        googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
     }
 
     public void createMainFrame() {
@@ -221,23 +219,13 @@ public class MainView {
         naverFolderList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 String selectedFolder = naverFolderList.getSelectedValue();
-
-                if ("받은메일함".equals(selectedFolder)) {
-                    contentMailPanel.updateIndex(0);
-                    updateMailList(naverMailList, googleMailList, selectedFolder);
-                    cardLayout.show(cardPanel, "infoPanel");
-                } else if ("보낸메일함".equals(selectedFolder)) {
-                    contentMailPanel.updateIndex(1);
-                    updateMailList(naverMailList, googleMailList, selectedFolder);
-                    cardLayout.show(cardPanel, "infoPanel");
-                }
-
                 if (naverUserInfoDTO.getUsername() == null || naverUserInfoDTO.getPassword() == null) {
                     showMessageInCardPanel(cardPanel, cardLayout, "네이버 계정을 연동해주세요.");
                 } else {
                     updateMailList(naverMailList, googleMailList, selectedFolder);
                     cardLayout.show(cardPanel, "infoPanel");
                 }
+                sendIndexToContentPanel(naverMailList,googleMailList,selectedFolder,cardLayout,cardPanel);
             }
         });
 
@@ -510,5 +498,16 @@ public class MainView {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, categoryPanel, cardPanel);
         splitPane.setDividerLocation(300);
         return splitPane;
+    }
+    private void sendIndexToContentPanel(JList<String[]> naverMailList, JList<String[]> googleMailList,String folderName,CardLayout cardLayout,JPanel cardPanel) {
+        if ("받은메일함".equals(folderName)) {
+            contentMailPanel.updateIndex(0);
+            updateMailList(naverMailList, googleMailList, folderName);
+            cardLayout.show(cardPanel, "infoPanel");
+        } else if ("보낸메일함".equals(folderName)) {
+            contentMailPanel.updateIndex(1);
+            updateMailList(naverMailList, googleMailList, folderName);
+            cardLayout.show(cardPanel, "infoPanel");
+        }
     }
 }
