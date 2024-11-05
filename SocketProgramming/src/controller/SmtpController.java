@@ -45,7 +45,7 @@ public class SmtpController {
 
         System.out.println("Response: " + responseValue);
 
-        for(String command : commands) {
+        for (String command : commands) {
             // 명령어 전송
             outToServer.writeBytes(command);
             outToServer.flush(); // 명령 전송 후 플러시하여 보냄
@@ -92,7 +92,7 @@ public class SmtpController {
             System.out.println("SmtpCommand: " + commands.get(i));
 
             // DATA 명령어인 경우 데이터 전송 상태로 변경
-            if (i > 1 && commands.get(i - 1).contains("DATA\r\n")) {
+            if (i > 0 && commands.get(i - 1).contains("DATA\r\n")) {
                 isData = true;
             }
             // 데이터 전송이 끝난 경우
@@ -100,30 +100,32 @@ public class SmtpController {
                 isData = false;
             }
 
-            if (!isData) {
-                responseValue = inFromServer.readLine(); // 서버 응답 확인
-                String statusCode = responseValue.split(" ")[0];
-                System.out.println("Response: " + responseValue);
+            if (isData)
+                continue;
 
-                // 예외 처리
-                switch (statusCode) {
-                    case "535":
-                        return SmtpStatusCode.NOT_ACCEPTED;
-                    case "553":
-                        return SmtpStatusCode.RECIPIENT_NOT_FOUND;
-                    case "221":
-                        return SmtpStatusCode.SERVICE_CLOSING;
-                    case "421":
-                        return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
-                }
+            responseValue = inFromServer.readLine(); // 서버 응답 확인
+            String statusCode = responseValue.split(" ")[0];
+            System.out.println("Response: " + responseValue);
 
-                // 그 이외의 예외 처리
-                if (responseValue.startsWith("5")) {
-                    return SmtpStatusCode.SYNTAX_ERROR;
-                } else if (responseValue.startsWith("4")) {
+            // 예외 처리
+            switch (statusCode) {
+                case "535":
+                    return SmtpStatusCode.NOT_ACCEPTED;
+                case "553":
+                    return SmtpStatusCode.RECIPIENT_NOT_FOUND;
+                case "221":
+                    return SmtpStatusCode.SERVICE_CLOSING;
+                case "421":
                     return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
-                }
             }
+
+            // 그 이외의 예외 처리
+            if (responseValue.startsWith("5")) {
+                return SmtpStatusCode.SYNTAX_ERROR;
+            } else if (responseValue.startsWith("4")) {
+                return SmtpStatusCode.SERVICE_NOT_AVAILABLE;
+            }
+
         }
 
         inFromServer.close();
@@ -133,12 +135,15 @@ public class SmtpController {
     }
 
     /*
-        * SSL 소켓을 생성하는 메소드
-        * SSL port = 465
-        * @return 생성된 SSL 소켓
+     * SSL 소켓을 생성하는 메소드
+     * SSL port = 465
+     * @return 생성된 SSL 소켓
      */
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        if (this.mailPlatform == null) {
+            throw new IllegalArgumentException("Invalid email address");
+        }
         return (SSLSocket) sslSocketFactory.createSocket(this.mailPlatform.getSmtpServer(), 465);
     }
 }
