@@ -221,6 +221,17 @@ public class MainView {
         naverFolderList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 String selectedFolder = naverFolderList.getSelectedValue();
+
+                if ("받은메일함".equals(selectedFolder)) {
+                    contentMailPanel.updateIndex(0);
+                    updateMailList(naverMailList, googleMailList, selectedFolder);
+                    cardLayout.show(cardPanel, "infoPanel");
+                } else if ("보낸메일함".equals(selectedFolder)) {
+                    contentMailPanel.updateIndex(1);
+                    updateMailList(naverMailList, googleMailList, selectedFolder);
+                    cardLayout.show(cardPanel, "infoPanel");
+                }
+
                 if (naverUserInfoDTO.getUsername() == null || naverUserInfoDTO.getPassword() == null) {
                     showMessageInCardPanel(cardPanel, cardLayout, "네이버 계정을 연동해주세요.");
                 } else {
@@ -427,6 +438,7 @@ public class MainView {
                             contentMailPanel.updateValue(value, index, naverUserInfoDTO.getUsername(), naverUserInfoDTO.getPassword());
                         } else if (browser == GOOGLE) {
                             contentMailPanel.updateValue(value, index, googleUserInfoDTO.getUsername(), googleUserInfoDTO.getPassword());
+
                         }
                         cardLayout.show(cardPanel, "detailPanel");
                     }
