@@ -45,34 +45,60 @@ public class NaverConnector {
         sendCommand("a001 LOGIN " + username + " " + password);
         System.out.println(readResponse());
 
-        //받은 메일함 작업 대상으로 설정
-        sendCommand("a002 SELECT INBOX");
-        System.out.println(readResponse());
+        //메일 폴더함 명령어 확인 코드
+        //sendCommand("a002 LIST \"\" \"*\"");
+        //System.out.println(readResponse());
+    }
+
+    private int getMailCount(String folderName) throws Exception {
+        sendCommand("a002 STATUS \"" + folderName + "\" (MESSAGES)");
+        String line;
+        int mailCount = 0;
+
+        Pattern pattern = Pattern.compile("\\d+");
+
+        while ((line = reader.readLine()) != null) {
+            System.out.println("서버 응답: " + line);
+            if (line.startsWith("*") && line.contains("MESSAGES")) {
+                Matcher matcher = pattern.matcher(line);
+                if (matcher.find()) {
+                    mailCount = Integer.parseInt(matcher.group());  // 첫 번째 매칭된 숫자 추출
+                }
+                break;
+            }
+            if (line.contains("OK") || line.contains("NO") || line.contains("BAD")) {
+                break;
+            }
+        }
+
+        return mailCount;
     }
 
     // 메일 목록을 가져오는 메서드
-    public void fetchMails() throws Exception {
-        List<String[]> mails = new ArrayList<>();
+    private List<String[]> fetchMailData(String folderName) throws Exception {
+        int mailCount = getMailCount(folderName);
+        String range;
 
-        // 첫 20개의 메일 헤더 정보를 요청
-        sendCommand("a003 FETCH 980:1000 (BODY[HEADER.FIELDS (FROM SUBJECT DATE)] BODY[TEXT])");
+        // range 설정 조건
+        if (mailCount <= 1000) {
+            range = (mailCount - 10 > 0 ? mailCount - 10 : 1) + ":" + mailCount;
+        } else {
+            range = "980:1000";
+        }
+        sendCommand("a003 SELECT \"" + folderName + "\"");
+        System.out.println(readResponse());
+
+        List<String[]> mails = new ArrayList<>();
+        sendCommand("a004 FETCH " + range + " (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])");
 
         String line;
-        String from = "", subject = "", date = "", body = "", mailId = "";
+        String from = "", to="", subject = "", date = "", body = "", mailId = "";
         boolean isReadingMail = false;
         boolean isReadingBody = false;
         StringBuilder bodyBuilder = new StringBuilder();
-        long lastNoopTime = System.currentTimeMillis();
 
         while ((line = reader.readLine()) != null) {
             System.out.println("서버 응답: " + line);  // 서버 응답을 디버깅 목적으로 모두 출력
-
-            // 주기적으로 NOOP 명령 전송
-            if (System.currentTimeMillis() - lastNoopTime > 30000) { // 30초마다 NOOP
-                sendCommand("NOOP");
-                lastNoopTime = System.currentTimeMillis();
-                System.out.println("NOOP 명령어 전송하여 타임아웃 방지");
-            }
 
             if (line.startsWith("*") && line.contains("FETCH")) {
                 // FETCH 응답에서 메일 ID 추출
@@ -85,6 +111,11 @@ public class NaverConnector {
                 from = line.substring(line.indexOf("From:") + 5).trim();
                 from = MimeDecoder.getInstance().decodeMimeText(from);
                 System.out.println("보낸 사람 파싱: " + from);
+
+            } else if (isReadingMail && line.toUpperCase().startsWith("TO:")) {
+                to = line.substring(line.indexOf("To:") + 5).trim();
+                to = MimeDecoder.getInstance().decodeMimeText(to);
+                System.out.println("보낸 사람 파싱: " + to);
             } else if (isReadingMail && line.toUpperCase().startsWith("SUBJECT:")) {
                 subject = line.substring(line.indexOf("Subject:") + 8).trim();
                 subject = MimeDecoder.getInstance().decodeMimeText(subject);
@@ -107,8 +138,9 @@ public class NaverConnector {
                     isReadingBody = false;
 
                     // 메일 데이터 저장
-                    mails.add(new String[]{from, subject, date, body});
-                    from = subject = date = body = mailId = "";
+
+                    mails.add(new String[]{from, to, subject, date, body});
+                    from = to = subject = date = body = mailId = "";
                     isReadingMail = false;
                 } else {
                     bodyBuilder.append(line).append("\n");
@@ -119,7 +151,24 @@ public class NaverConnector {
                 break;
             }
         }
-        EmailDataRepository.getInstance().setMailData(mails);
+        return mails;
+    }
+
+    //받은 메일함, 보낸 메일함, 임시 보관함, 휴지통 데이터를 각각 가져와 저장
+    public void fetchAllMailFolders() throws Exception{
+        EmailDataRepository repository = EmailDataRepository.getInstance();
+
+        //받은 메일함
+        repository.setNaverInBoxMailData(fetchMailData("INBOX"));
+
+        //보낸 메일함
+        repository.setNaverSentMailData(fetchMailData("Sent Messages"));
+
+        //임시 보관함
+        repository.setNaverDraftMailData(fetchMailData("Drafts"));
+
+        //휴지통
+        repository.setNaverTrashMailData(fetchMailData("Deleted Messages"));
     }
 
     // 명령어를 서버로 보내는 메서드
@@ -147,7 +196,8 @@ public class NaverConnector {
 
     public void disconnect() throws Exception {
         // LOGOUT 명령어를 보내 로그아웃 요청
-        sendCommand("a004 LOGOUT");
+
+        sendCommand("a005 LOGOUT");
 
         // 로그아웃 응답 확인
         System.out.println(readResponse());
