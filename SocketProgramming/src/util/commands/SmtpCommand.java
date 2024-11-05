@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 
@@ -51,7 +52,8 @@ public class SmtpCommand {
         commands.add("--" + boundary + "\r\n");
         commands.add("Content-Type: text/plain; charset=\"UTF-8\"\r\n");
         commands.add("Content-Transfer-Encoding: base64\r\n");
-        commands.add("\r\n" + encodeText(sendMailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\r\n");
+        commands.add("\r\n" + encodeText(sendMailDTO.message().getBytes(StandardCharsets.UTF_8)) + "\n");
+        commands.add("보낸 시간: " + sendMailDTO.dateTime().format(DateTimeFormatter.BASIC_ISO_DATE) + "\r\n");
 
         // 첨부 파일 추가
         for (File file : sendMailDTO.attachedFiles()) {
