@@ -207,6 +207,7 @@ public class SenderFrame extends JFrame {
             }.execute();
         } else {
             sendEmails(sendMailDTOs);
+            dispose();
         }
     }
 
