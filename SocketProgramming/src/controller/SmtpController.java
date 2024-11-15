@@ -10,6 +10,12 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.util.List;
 
+/*
+ * SMTP 서버와 통신하는 클래스
+ * @param senderAddress 발신자 이메일 주소
+ * @param password 발신자 이메일 비밀번호
+ * @param mailPlatform 은 senderAddress 도메인에 따라 SMTP 서버를 결정
+ */
 public class SmtpController {
 
     private final String senderAddress, password;
@@ -27,15 +33,17 @@ public class SmtpController {
         }
     }
 
+    /*
+     * SMTP 서버와 인증하는 메소드
+     * @return 인증 결과를 나타내는 SmtpStatusCode
+     * @throws IOException
+     */
     public SmtpStatusCode authenticate() throws IOException {
-        List<String> commands = SmtpCommand.createAuthCommands(this.senderAddress, this.password, this.mailPlatform);
-        SSLSocket sslSocket = createSSLSocket();
+        List<String> commands = SmtpCommand.createAuthCommands(this.senderAddress, this.password, this.mailPlatform);   // 인증 명령어 생성
+        SSLSocket sslSocket = createSSLSocket();    // SSL 소켓 생성
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
         String responseValue = inFromServer.readLine(); // 서버 응답 확인
-
-        System.out.println("username: " + this.senderAddress);
-        System.out.println("password: " + password);
 
         System.out.println("Response: " + responseValue);
 
@@ -45,7 +53,8 @@ public class SmtpController {
             outToServer.flush(); // 명령 전송 후 플러시하여 보냄
             System.out.println("SmtpCommand: " + command);
 
-            responseValue = inFromServer.readLine(); // 서버 응답 확인
+            // 서버 응답 확인
+            responseValue = inFromServer.readLine();
             String statusCode = responseValue.split(" ")[0];
             System.out.println("Response: " + responseValue);
 
@@ -73,7 +82,7 @@ public class SmtpController {
         SSLSocket sslSocket = createSSLSocket();
         DataOutputStream outToServer = new DataOutputStream(sslSocket.getOutputStream());
         BufferedReader inFromServer = new BufferedReader(new InputStreamReader(sslSocket.getInputStream()));
-        boolean isData = false;
+        boolean isData = false; // DATA 명령어인 경우 서버의 응답을 받을 필요 없어서 boolean 변수로 처리
         String responseValue = inFromServer.readLine(); // 서버 응답 확인
 
         System.out.println("Response: " + responseValue);
@@ -85,15 +94,16 @@ public class SmtpController {
             outToServer.flush(); // 명령 전송 후 플러시하여 보냄
             System.out.println("SmtpCommand: " + commands.get(i));
 
-            // DATA 명령어인 경우 데이터 전송 상태로 변경
+            // DATA 명령어인 경우 서버의 응답을 받을 필요 없이 본문과 파일을 전송하기 때문에 isData 를 true 로 변경
             if (i > 0 && commands.get(i - 1).contains("DATA\r\n")) {
                 isData = true;
             }
-            // 데이터 전송이 끝난 경우
+            // 본문과 파일 전송이 끝난 경우 다시 서버의 응답을 받기 위해 isData 를 false 로 변경
             else if (commands.get(i).contains("\r\n.\r\n")) {
                 isData = false;
             }
 
+            // DATA 명령어인 경우 서버의 응답을 받을 필요 없이 본문과 파일을 전송하기 때문에 continue
             if (isData)
                 continue;
 
@@ -122,9 +132,12 @@ public class SmtpController {
 
         }
 
+        // 스트림과 소켓 닫기
         inFromServer.close();
         outToServer.close();
         sslSocket.close();
+
+        // 메일 전송 완료
         return SmtpStatusCode.SERVICE_CLOSING;
     }
 
@@ -135,9 +148,11 @@ public class SmtpController {
      */
     private SSLSocket createSSLSocket() throws IOException {
         SSLSocketFactory sslSocketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        // 유효하지 않은 SMTP 서버인 경우 예외 처리
         if (this.mailPlatform == null) {
             throw new IllegalArgumentException("Invalid email address");
         }
+        // SMTP 서버에 맞는 SSL 소켓 생성
         return (SSLSocket) sslSocketFactory.createSocket(this.mailPlatform.getSmtpServer(), 465);
     }
 }

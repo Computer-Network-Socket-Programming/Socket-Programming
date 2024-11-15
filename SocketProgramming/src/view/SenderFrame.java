@@ -17,10 +17,10 @@ import java.util.Arrays;
 
 public class SenderFrame extends JFrame {
 
-    private final SmtpController senderController;
+    private final SmtpController senderController;  // 메일 전송을 위한 controller
     private final JTextField receiverField, subjectField;  // 받는사람, 제목 field
     private final JTextArea messageArea;    // 본문 field
-    private final ArrayList<File> attachedFiles;
+    private final ArrayList<File> attachedFiles;    // 첨부파일 목록
 
     // 새로운 메일 쓰기 버튼을 눌렀을 때 호출 되는 생성자
     public SenderFrame(String senderAddress, String password) {
@@ -72,7 +72,6 @@ public class SenderFrame extends JFrame {
 
     /*
      * form panel 을 생성하는 메소드
-     * form panel 은 4개의 text field 로 구성되어 있음
      */
     private JPanel createFormPanel() {
         JPanel mainPanel = new JPanel(new GridLayout(2, 1));
@@ -93,7 +92,7 @@ public class SenderFrame extends JFrame {
 
     /*
      * button panel 을 생성하는 메소드
-     * button panel 은 보내기 버튼과 취소 버튼으로 구성되어 있음
+     * button panel 은 보내기 버튼과 취소 버튼, 10초 후 보내기 버튼으로 구성되어 있음
      */
     private JPanel createCheckButton() {
         JPanel buttonPanel = new JPanel(new GridLayout(1, 3));
@@ -138,6 +137,14 @@ public class SenderFrame extends JFrame {
         return textAreaPanel;
     }
 
+    /*
+        * file selection panel 을 생성하는 메소드
+        * file selection panel 은 파일 선택 버튼과 파일 삭제 버튼, 파일 경로를 보여주는 text area 로 구성되어 있음
+        * 파일 선택 버튼을 클릭하면 JFileChooser 를 이용하여 파일을 선택할 수 있음
+        * 파일 삭제 버튼을 클릭하면 선택된 파일을 모두 삭제할 수 있음
+        * 파일 경로는 text area 에 추가되어 보여짐
+        * 선택된 파일은 attachedFiles 에 추가됨
+     */
     private JPanel createFileSelectionPanel() {
         JPanel result = new JPanel(new BorderLayout());
         JButton fileSelectionButton = new JButton("파일 선택");
@@ -193,6 +200,11 @@ public class SenderFrame extends JFrame {
         filePathArea.setText("");
     }
 
+    /*
+        * 보내기 버튼을 클릭했을 때 호출되는 메소드
+        * receiverField, subjectField, messageArea 에 입력된 값을 가져와서
+        * controller 의 sendMail method 를 호출하여 메일을 전송함
+     */
     private void sendButtonOnClick(ActionEvent e) {
         ArrayList<SendMailDTO> sendMailDTOs = createSendMailDTOs();
 
@@ -219,7 +231,8 @@ public class SenderFrame extends JFrame {
      * 보내기 버튼을 클릭했을 때 호출되는 메소드
      * receiverField, subjectField, messageArea 에 입력된 값을 가져와서
      * controller 의 sendMail method 를 호출하여 메일을 전송함
-     * 메일 전송 후 메일이 전송되었다는 팝업 메시지를 띄움
+     * 메일 전송 실패 시 실패 팝업 메시지를 띄움
+     * 메일 전송 성공 시 메일이 전송되었다는 팝업 메시지를 띄움
      */
     private void sendEmails(ArrayList<SendMailDTO> sendMailDTOs) {
         SmtpStatusCode statusCode = null;
@@ -252,6 +265,12 @@ public class SenderFrame extends JFrame {
     private ArrayList<SendMailDTO> createSendMailDTOs() {
         ArrayList<SendMailDTO> sendMailDTOs = new ArrayList<>();
 
+        /*
+            * receiverField 에 입력된 이메일 주소를 , 를 기준으로 나누어
+            * SendMailDTO 객체를 생성하여 sendMailDTOs 에 추가함
+            * receiverField 에 입력된 이메일 주소는 , 를 기준으로 여러 개 입력할 수 있음
+            * 이메일 주소는 <이메일 주소> 형태로 입력할 수 있음
+         */
         if (this.receiverField.getText().contains(",")) {
             String[] recipients = this.receiverField.getText().split(",");
 
