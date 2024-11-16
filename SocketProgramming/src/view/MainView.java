@@ -38,8 +38,8 @@ public class MainView {
 
     public MainView(String userId) {
         this.nickname = userId;
-        this.naverUserInfoDTO = new NaverUserInfoDTO();
-        this.googleUserInfoDTO = new GoogleUserInfoDTO();
+        this.naverUserInfoDTO = new NaverUserInfoDTO(); // 네이버 아이디와 비밀번호를 받아오기 위한 DTO(그릇)
+        this.googleUserInfoDTO = new GoogleUserInfoDTO(); // 구글 아이디와 비밀번호를 받아오기 위한 DTO
         googleUserInfoDTO.setUsername("tkdgur9799@gmail.com");
         googleUserInfoDTO.setPassword("nolb vtfr mqls hnjj");
     }
@@ -71,28 +71,43 @@ public class MainView {
         topPanel.add(verifyEmailButton, BorderLayout.EAST);
         topPanel.add(refreshButton, BorderLayout.CENTER);
 
-        createSendMailButtonEvent(sendMailButton);
-        createVerifyEmailButtonEvent(verifyEmailButton);
-        createRefreshButtonEvent(refreshButton);
+        createSendMailButtonEvent(sendMailButton); //메일 보내기 버튼 생성
+        createVerifyEmailButtonEvent(verifyEmailButton); //메일 인증 버튼 생성
+        createRefreshButtonEvent(refreshButton); //새로 고침 버튼 생성
 
         return topPanel;
     }
 
+    /**
+     * 새로 고침 버튼에 이벤트 추가 함수
+     * @param button
+     */
     private void createRefreshButtonEvent(JButton button) {
         button.addActionListener(e -> {
+            //네이버 인증 정보만 있으면 네이버 이메일만 로드 하고 구글 이메일은 로드 하지 않도록 예외 처리
             if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() == null && googleUserInfoDTO.getPassword() == null)) {
                 loadEmailsInBackground(NAVER);
-            } else if ((naverUserInfoDTO.getUsername() == null && naverUserInfoDTO.getPassword() == null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
+            }
+            //구글 인증 정보만 있으면 네이버 이메일은 로드 하지 않고 구글 이메일만 로드 하도록 예외 처리
+            else if ((naverUserInfoDTO.getUsername() == null && naverUserInfoDTO.getPassword() == null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
                 loadEmailsInBackground(GOOGLE);
-            } else if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
+            }
+            //네이버와 구글 모두 인증 정보가 있으면 두 이메일 모두 로드 해오기
+            else if ((naverUserInfoDTO.getUsername() != null && naverUserInfoDTO.getPassword() != null) && (googleUserInfoDTO.getUsername() != null && googleUserInfoDTO.getPassword() != null)) {
                 loadEmailsInBackground(NAVER);
                 loadEmailsInBackground(GOOGLE);
-            } else {
+            }
+            //네이버와 구글 모두 인증 정보가 없다면 별도 메시지를 통한 예외 처리
+            else {
                 JOptionPane.showMessageDialog(null, "메일 계정을 1개 이상 연동해주세요.");
             }
         });
     }
 
+    /**
+     * 브라우저 정보를 인자로 받아 각각의 브라우저에 맞춰 이메일을 로드 해주는 함수
+     * @param browser -> int형으로 받아 네이버와 구글 구분
+     */
     public void loadEmailsInBackground(int browser) {
         final JDialog loadingDialog = new JDialog(mainFrame, "로딩 중...", false);
         loadingDialog.setSize(200, 100);
@@ -103,6 +118,7 @@ public class MainView {
         loadingDialog.setVisible(true);
 
         // 백그라운드에서 메일을 로드하는 작업 실행
+        // SwingWorker : 백그라운드 스레드를 만들어서 내부 로직을 추가적으로 수행하도록 만들어줌
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
@@ -126,11 +142,16 @@ public class MainView {
         worker.execute();
     }
 
+    /**
+     * 네이버 이메일 받아오는 함수
+     */
     private void getNaverEmails() {
         try {
+            //네이버 아이디와 비밀번호 받아와서 저장
             String username = naverUserInfoDTO.getUsername();
             String password = naverUserInfoDTO.getPassword();
 
+            //네이버 커넥터 클래스 호출
             NaverConnector naverConnector = new NaverConnector(username, password);
 
             naverConnector.fetchAllMailFolders();
@@ -394,7 +415,7 @@ public class MainView {
         }
     }
 
-
+    //초기 메일 제목 나열 및 클릭 시 이벤트 패널 생성
     private JList<String[]> createMailList(JPanel cardPanel, CardLayout cardLayout, int browser) {
         DefaultListModel<String[]> listModel = new DefaultListModel<>();
         JList<String[]> mailList = new JList<>(listModel);
