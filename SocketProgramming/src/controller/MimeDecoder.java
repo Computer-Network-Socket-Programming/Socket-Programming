@@ -19,6 +19,7 @@ public class MimeDecoder {
         return instance;
     }
 
+    //MIME 인코딩된 텍스트 디코딩하는 메서드
     public String decodeMimeText(String text) {
         try {
             // =?UTF-8?B?...?= 형식의 인코딩된 텍스트를 찾아 디코딩
@@ -52,6 +53,11 @@ public class MimeDecoder {
         }
     }
 
+    /**
+     * 숫자 이후 데이터 받아오는 함수 "BODY[TEXT] {123}This is the body content."
+     * @param fetchLine
+     * @return
+     */
     public String extractBodyFromFetch(String fetchLine) {
         Pattern pattern = Pattern.compile("\\{\\d+\\}");
         Matcher matcher = pattern.matcher(fetchLine);

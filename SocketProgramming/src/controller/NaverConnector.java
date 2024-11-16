@@ -13,30 +13,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NaverConnector {
-    private static final String HOST = "imap.naver.com";
-    private static final int PORT = 993;
+    private static final String HOST = "imap.naver.com"; //네이버 IMAP 서버 주소
+    private static final int PORT = 993; //IMAP 서버 포트 번호
 
     private SSLSocket socket; //SSL 소켓, 서버와의 SSL 연결 담당
     private BufferedReader reader; //서버 응답을 읽어오는 스트림
     private PrintWriter writer; // 서버로 명령어를 보내는 스트림
 
+    //생성자 : 사용자 아이디와 비밀번호 받아와서 네이버 IMAP 서버에 연결
     public NaverConnector(String username, String password) throws Exception{
-        connect(username, password);
+        connect(username, password); //SSL 연결 및 로그인 수행
     }
 
     //네이버 IMAP 서버에 SSL로 연결하고 로그인하는 메서드
     private void connect(String username, String password) throws Exception{
 
-        //SSL 소켓을 생성하여 네이버 IMAP 서버에 연결
+        //SSL 소켓을 생성하여 기본 SSL 소켓 팩토리 객체를 얻음(소켓 생성 자체가 캡슐화 되어 있기 때문에 소켓 프레임 워크 규칙에 의해 SSL 소켓 인스턴스를 얻으려면 소켓 팩토리 생성 필수)
         SSLSocketFactory factory = (SSLSocketFactory) SSLSocketFactory.getDefault();
-        /**
-         * 위: 기본 소켓 팩토리를 얻는 코드, 아래 : 소켓 인스턴스 생성
-         */
+
+        //ssl 소켓 생성 및 네이버 IMAP 서버 연결
         socket = (SSLSocket) factory.createSocket(HOST, PORT);
 
         //서버 응답 읽기, 명령어 보내기 위한 스트림 설정
-        reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        writer = new PrintWriter(socket.getOutputStream(), true);
+        reader = new BufferedReader(new InputStreamReader(socket.getInputStream())); //socket.getInputStream() : 소켓에서 데이터 들어오는 스트림을 가져옴 -> InputStreamReader: 바이트 스트림을 문자 스트림으로 변환
+        writer = new PrintWriter(socket.getOutputStream(), true);//socket.getOutputStream: 서버로 데이터를 보내기 위해 사용되는 출력 스트림, autoFlush: 출력 버퍼 자동으로 지우기
 
         //서버 응답 확인
         System.out.println(readResponse());
@@ -50,19 +50,23 @@ public class NaverConnector {
         //System.out.println(readResponse());
     }
 
+    //특정 폴더의 메일 개수 가져오는 함수
     private int getMailCount(String folderName) throws Exception {
+
+        //STATUS 명령어를 통해 폴더의 메일 개수 요청
         sendCommand("a002 STATUS \"" + folderName + "\" (MESSAGES)");
         String line;
         int mailCount = 0;
 
+        //숫자 패턴 정규 표현식 생성
         Pattern pattern = Pattern.compile("\\d+");
 
         while ((line = reader.readLine()) != null) {
             System.out.println("서버 응답: " + line);
-            if (line.startsWith("*") && line.contains("MESSAGES")) {
+            if (line.startsWith("*") && line.contains("MESSAGES")) { // 서버 응답 : * STATUS "INBOX" (MESSAGES 123) \n a002 OK STATUS completed -> 002가 반환되는 경우가 있어 조건 중요
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
-                    mailCount = Integer.parseInt(matcher.group());  // 첫 번째 매칭된 숫자 추출
+                    mailCount = Integer.parseInt(matcher.group());  // 첫 번째 매칭된 숫자 추출 -> 가끔 (MESSAGES 123) UNSEEN 10 이런식으로 반환될 때가 있어서
                 }
                 break;
             }
@@ -85,23 +89,23 @@ public class NaverConnector {
         } else {
             range = "980:1000";
         }
-        sendCommand("a003 SELECT \"" + folderName + "\"");
+        sendCommand("a003 SELECT \"" + folderName + "\""); //작업할 메일함 설정(보낸 메일함, 받은 메일함 등)
         System.out.println(readResponse());
 
         List<String[]> mails = new ArrayList<>();
-        sendCommand("a004 FETCH " + range + " (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])");
+        sendCommand("a004 FETCH " + range + " (BODY[HEADER.FIELDS (FROM TO SUBJECT DATE)] BODY[TEXT])"); // HEADER와 본문에서 정보 받아오기
 
         String line;
         String from = "", to="", subject = "", date = "", body = "", mailId = "";
         boolean isReadingMail = false;
         boolean isReadingBody = false;
-        StringBuilder bodyBuilder = new StringBuilder();
+        StringBuilder bodyBuilder = new StringBuilder();//본문 데이터 누적 저장
 
         while ((line = reader.readLine()) != null) {
             System.out.println("서버 응답: " + line);  // 서버 응답을 디버깅 목적으로 모두 출력
 
             if (line.startsWith("*") && line.contains("FETCH")) {
-                // FETCH 응답에서 메일 ID 추출
+                // FETCH 응답에서 메일 ID 추출 -> 원래는 사용하려 했는데 코드 상 딱히 필요 없어서 안씀 ㅠ 메일 순서 받아오는 건데 그냥 코드 상으로 자체 Index 설정해서 씀
                 String[] parts = line.split(" ");
                 if (parts.length > 1) {
                     mailId = parts[1];
@@ -113,8 +117,8 @@ public class NaverConnector {
                 System.out.println("보낸 사람 파싱: " + from);
 
             } else if (isReadingMail && line.toUpperCase().startsWith("TO:")) {
-                to = line.substring(line.indexOf("To:") + 5).trim();
-                to = MimeDecoder.getInstance().decodeMimeText(to);
+                to = line.substring(line.indexOf("To:") + 5).trim(); // 얘는 3으로 했어야 했는데 왜 5로 했죠..?
+                to = MimeDecoder.getInstance().decodeMimeText(to); // 인코딩해서 날아오는 데이터 디코딩 해주는 클래스의 함수 호출
                 System.out.println("보낸 사람 파싱: " + to);
             } else if (isReadingMail && line.toUpperCase().startsWith("SUBJECT:")) {
                 subject = line.substring(line.indexOf("Subject:") + 8).trim();
@@ -126,7 +130,7 @@ public class NaverConnector {
                 System.out.println("날짜 파싱: " + date);
             } else if (isReadingMail && line.contains("BODY[TEXT]")) {
                 isReadingBody = true;
-                bodyBuilder = new StringBuilder();
+                bodyBuilder = new StringBuilder();//본문 데이터 초기화 -> .setLength(0)했으면 더 좋았을듯
                 // 본문 시작 부분이 같은 줄에 있을 경우
                 String bodyStart = MimeDecoder.getInstance().extractBodyFromFetch(line);
                 if (!bodyStart.isEmpty()) {
@@ -134,7 +138,7 @@ public class NaverConnector {
                 }
             } else if (isReadingBody) {
                 if (line.equals(")")) {
-                    body = MimeDecoder.getInstance().parseEmailBody(bodyBuilder.toString());
+                    body = MimeDecoder.getInstance().parseEmailBody(bodyBuilder.toString()); //최종 본문 완성
                     isReadingBody = false;
 
                     // 메일 데이터 저장
