@@ -1,2 +1,2 @@
 # Socket-Programming
-SMTP Protocol 구현
+email 송수신 구현
